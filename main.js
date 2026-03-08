@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const http = require("http");
 const fs = require("fs");
@@ -8,6 +8,94 @@ let mainWindow;
 let lanServer = null;
 const LAN_PORT = 3777;
 
+// ─── PROJECT DIRECTORY ───
+const SETTINGS_PATH = path.join(os.homedir(), ".smoothbrain", "settings.json");
+const DEFAULT_PROJECT_DIR = path.join(os.homedir(), "Desktop", "Smoothbrain", "Projects");
+
+function loadSettings() {
+  try { return JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf8")); } catch { return {}; }
+}
+function saveSettings(data) {
+  const dir = path.dirname(SETTINGS_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(data, null, 2));
+}
+function getProjectDir() {
+  const s = loadSettings();
+  return s.projectDir || DEFAULT_PROJECT_DIR;
+}
+
+// ─── IPC: FILE SYSTEM ───
+ipcMain.handle("fs:writeFile", async (_, filePath, content) => {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(filePath, content, "utf8");
+  return { ok: true, path: filePath };
+});
+
+ipcMain.handle("fs:readFile", async (_, filePath) => {
+  if (!fs.existsSync(filePath)) return { ok: false, error: "not found" };
+  return { ok: true, content: fs.readFileSync(filePath, "utf8") };
+});
+
+ipcMain.handle("fs:mkdir", async (_, dirPath) => {
+  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+  return { ok: true };
+});
+
+ipcMain.handle("fs:readDir", async (_, dirPath) => {
+  if (!fs.existsSync(dirPath)) return { ok: true, entries: [] };
+  const entries = [];
+  function walk(dir, prefix) {
+    for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+      const rel = prefix ? `${prefix}/${item.name}` : item.name;
+      if (item.isDirectory()) {
+        entries.push({ name: rel, type: "dir" });
+        walk(path.join(dir, item.name), rel);
+      } else {
+        const stat = fs.statSync(path.join(dir, item.name));
+        entries.push({ name: rel, type: "file", size: stat.size });
+      }
+    }
+  }
+  walk(dirPath, "");
+  return { ok: true, entries };
+});
+
+ipcMain.handle("fs:exists", async (_, filePath) => {
+  return fs.existsSync(filePath);
+});
+
+ipcMain.handle("fs:deleteFile", async (_, filePath) => {
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  return { ok: true };
+});
+
+// ─── IPC: DIALOG ───
+ipcMain.handle("dialog:pickDirectory", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ["openDirectory", "createDirectory"],
+    title: "Choose Project Directory",
+  });
+  if (result.canceled || !result.filePaths.length) return null;
+  return result.filePaths[0];
+});
+
+// ─── IPC: PROJECT DIR ───
+ipcMain.handle("project:getDir", () => getProjectDir());
+
+ipcMain.handle("project:setDir", (_, dir) => {
+  const s = loadSettings();
+  s.projectDir = dir;
+  saveSettings(s);
+  return dir;
+});
+
+ipcMain.handle("shell:openPath", (_, dir) => {
+  shell.openPath(dir);
+});
+
+// ─── LAN SERVER ───
 function getLocalIP() {
   const nets = os.networkInterfaces();
   for (const name of Object.keys(nets)) {
@@ -24,7 +112,6 @@ function startLanServer() {
   lanServer = http.createServer((req, res) => {
     fs.readFile(htmlPath, "utf8", (err, data) => {
       if (err) { res.writeHead(500); res.end("Error"); return; }
-      // Inject mobile viewport + safe area padding for phones
       const mobile = data.replace(
         "</head>",
         `<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -66,6 +153,7 @@ function showLanBanner(url) {
   `);
 }
 
+// ─── WINDOW ───
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1100,
@@ -81,6 +169,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: false,
+      preload: path.join(__dirname, "preload.js"),
     },
     show: false,
   });
@@ -96,6 +185,7 @@ function createWindow() {
   });
 }
 
+// ─── MENU ───
 const template = [
   {
     label: app.name,
@@ -191,12 +281,47 @@ const template = [
         type: "checkbox",
         checked: false,
         click: (menuItem) => {
-          if (menuItem.checked) {
-            startLanServer();
-          } else {
-            stopLanServer();
+          if (menuItem.checked) startLanServer();
+          else stopLanServer();
+        },
+      },
+    ],
+  },
+  {
+    label: "Project",
+    submenu: [
+      {
+        label: "Open Project Folder",
+        accelerator: "Cmd+Shift+O",
+        click: () => {
+          const dir = getProjectDir();
+          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+          shell.openPath(dir);
+        },
+      },
+      {
+        label: "Change Project Folder...",
+        click: async () => {
+          const result = await dialog.showOpenDialog(mainWindow, {
+            properties: ["openDirectory", "createDirectory"],
+            title: "Choose Project Directory",
+          });
+          if (!result.canceled && result.filePaths.length) {
+            const s = loadSettings();
+            s.projectDir = result.filePaths[0];
+            saveSettings(s);
+            mainWindow?.webContents.executeJavaScript(`
+              projectDir = "${result.filePaths[0].replace(/"/g, '\\"')}";
+              updateProjectUI();
+            `);
           }
         },
+      },
+      { type: "separator" },
+      {
+        label: "Apply All Workspace Files",
+        accelerator: "Cmd+Shift+A",
+        click: () => mainWindow?.webContents.executeJavaScript("applyAllToProject()"),
       },
     ],
   },
@@ -212,6 +337,10 @@ const template = [
 ];
 
 app.whenReady().then(() => {
+  // Ensure default project dir exists
+  const dir = getProjectDir();
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   createWindow();
 

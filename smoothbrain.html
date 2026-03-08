@@ -631,6 +631,40 @@
     background: rgba(0,229,184,0.12);
     border-color: rgba(0,229,184,0.2);
   }
+  .project-bar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 20px;
+    border-top: 1px solid var(--border);
+    background: rgba(167,139,250,0.03);
+    flex-shrink: 0;
+  }
+  .project-bar-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px;
+    color: rgba(167,139,250,0.5);
+  }
+  .project-bar-path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: rgba(255,255,255,0.4);
+    flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .project-bar-btn {
+    padding: 2px 8px; border-radius: 4px;
+    background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.15);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; letter-spacing: 0.5px;
+    color: #a78bfa; cursor: pointer; transition: all 0.15s;
+  }
+  .project-bar-btn:hover { background: rgba(167,139,250,0.15); }
+  .code-action-btn.apply-btn {
+    color: #10b981; border-color: rgba(16,185,129,0.2);
+    background: rgba(16,185,129,0.06);
+  }
+  .code-action-btn.apply-btn:hover { background: rgba(16,185,129,0.15); }
+  .code-action-btn.applied {
+    color: #10b981; border-color: rgba(16,185,129,0.3);
+    background: rgba(16,185,129,0.1);
+  }
   .msg-content .msg-heading {
     font-weight: 500; color: rgba(255,255,255,0.9);
     font-size: 14px; margin: 14px 0 6px;
@@ -1182,6 +1216,15 @@
       </div>
       <div class="empty-hint">select agents below · type · enter</div>
     </div>
+  </div>
+
+  <!-- PROJECT BAR -->
+  <div class="project-bar" id="projectBar" style="display:none">
+    <span class="project-bar-label">PROJECT</span>
+    <span class="project-bar-path" id="projectPath"></span>
+    <button class="project-bar-btn" onclick="changeProjectDir()">CHANGE</button>
+    <button class="project-bar-btn" onclick="openProjectDir()">OPEN</button>
+    <button class="project-bar-btn" onclick="applyAllToProject()" style="color:#10b981;border-color:rgba(16,185,129,0.15)">APPLY ALL</button>
   </div>
 
   <!-- WORKSPACE FILES -->
@@ -1852,7 +1895,9 @@ function renderMessageHTML(text) {
           if (fnMatch) fileName = fnMatch[1].trim();
         }
         const langTag = displayLang ? `<span class="code-block-lang">${displayLang}</span>` : "";
-        const saveBtn = `<div class="code-block-actions">${
+        const applyBtn = fileName && window.smoothbrain?.isElectron
+          ? `<button class="code-action-btn apply-btn" onclick="applyCodeToProject('${codeId}','${escapeHtml(fileName)}')">APPLY</button>` : "";
+        const saveBtn = `<div class="code-block-actions">${applyBtn}${
           fileName ? `<button class="code-action-btn" onclick="saveCodeToWorkspace('${codeId}','${escapeHtml(fileName)}')">SAVE</button>` : ""
         }<button class="code-action-btn" onclick="copyCode('${codeId}')">COPY</button></div>`;
         html += `<div class="code-block" id="${codeId}">${fileName ? `<span class="code-block-lang">${fileName}</span>` : langTag}${saveBtn}<code>${escaped}</code></div>`;
@@ -2711,9 +2756,6 @@ function saveCodeToWorkspace(codeId, filename) {
   if (btn) { btn.textContent = "SAVED"; btn.classList.add("saved"); }
 
   renderWorkspaceBar();
-
-  // Also trigger download immediately
-  downloadFile(fullPath, content);
 }
 
 function copyCode(codeId) {
@@ -2749,6 +2791,7 @@ function renderWorkspaceBar() {
 
   if (workspaceFiles.size === 0) {
     bar.classList.remove("visible");
+    updateProjectUI();
     return;
   }
   bar.classList.add("visible");
@@ -2761,6 +2804,7 @@ function renderWorkspaceBar() {
     chip.onclick = () => downloadFile(path, content);
     container.appendChild(chip);
   }
+  updateProjectUI();
 }
 
 function downloadAllWorkspaceFiles() {
@@ -2785,6 +2829,90 @@ function downloadAllWorkspaceFiles() {
   a.download = `smoothbrain-workspace-${Date.now()}.md`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ─── PROJECT DIRECTORY (Electron only) ───
+let projectDir = "";
+
+async function initProject() {
+  if (!window.smoothbrain?.isElectron) return;
+  projectDir = await window.smoothbrain.getProjectDir();
+  updateProjectUI();
+}
+
+function updateProjectUI() {
+  const bar = document.getElementById("projectBar");
+  const pathEl = document.getElementById("projectPath");
+  if (!bar || !projectDir) return;
+  // Show project bar when workspace has files
+  if (workspaceFiles.size > 0) {
+    bar.style.display = "flex";
+    pathEl.textContent = projectDir.replace(/^\/Users\/[^/]+/, "~");
+    pathEl.title = projectDir;
+  } else {
+    bar.style.display = "none";
+  }
+}
+
+async function changeProjectDir() {
+  if (!window.smoothbrain) return;
+  const dir = await window.smoothbrain.pickDirectory();
+  if (dir) {
+    projectDir = await window.smoothbrain.setProjectDir(dir);
+    updateProjectUI();
+  }
+}
+
+async function openProjectDir() {
+  if (!window.smoothbrain || !projectDir) return;
+  await window.smoothbrain.openInFinder(projectDir);
+}
+
+async function applyCodeToProject(codeId, filename) {
+  if (!window.smoothbrain || !projectDir) return;
+  const el = document.getElementById(codeId);
+  if (!el) return;
+  const codeEl = el.querySelector("code");
+  const content = codeEl ? codeEl.textContent : el.textContent;
+
+  // Resolve path — keep subfolders from filename (e.g. "src/api.py")
+  const fullPath = projectDir + "/" + filename;
+
+  try {
+    await window.smoothbrain.writeFile(fullPath, content);
+    // Flash the button
+    const btn = el.querySelector(".apply-btn");
+    if (btn) {
+      btn.textContent = "APPLIED";
+      btn.classList.add("applied");
+      setTimeout(() => { btn.textContent = "APPLY"; btn.classList.remove("applied"); }, 2000);
+    }
+    // Also add to workspace map
+    workspaceFiles.set(filename, content);
+    renderWorkspaceBar();
+  } catch (e) {
+    console.error("Apply failed:", e);
+  }
+}
+
+async function applyAllToProject() {
+  if (!window.smoothbrain || !projectDir || workspaceFiles.size === 0) return;
+  let applied = 0;
+  for (const [filePath, content] of workspaceFiles) {
+    const fullPath = projectDir + "/" + filePath;
+    try {
+      await window.smoothbrain.writeFile(fullPath, content);
+      applied++;
+    } catch (e) {
+      console.error("Apply failed for", filePath, e);
+    }
+  }
+  // Flash feedback
+  const div = document.createElement("div");
+  div.className = "msg-divider msg-enter";
+  div.innerHTML = `<span style="color:#10b981">APPLIED ${applied} FILE${applied !== 1 ? "S" : ""} TO PROJECT</span>`;
+  $messages.appendChild(div);
+  scrollToBottom();
 }
 
 // ─── CUSTOM SYSTEM PROMPT ───
@@ -2982,6 +3110,7 @@ renderToggles();
 initCustomPrompt();
 initMemory();
 initApiKeyInputs();
+initProject();
 Brain.drawLogo();
 Brain.startHero();
 $input.focus();
