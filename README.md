@@ -46,11 +46,14 @@ Toggle agents on/off with the pills at the bottom of the chat. Only active agent
 - Agents see the full conversation including each other's responses
 - Natural group dynamics — they agree, disagree, build on each other, call each other out
 
-### File upload & analysis
-Drop files into the chat or click `+ file` — all active agents receive the file contents and can analyze, review, debug, or discuss them together. Supports text, code, markdown, JSON, and more. Great for:
-- Code review across multiple AI perspectives
-- Document analysis with different specializations active
-- Debugging with all agents seeing the same stack trace
+### File upload & multi-agent review
+Drop files into the chat or click `+ file` — every active agent receives the full file contents and reacts to them simultaneously. This is one of the most useful features: instead of getting one AI's opinion, you get four independent takes at once. They read each other's analysis and build on it, catch things the others missed, disagree on approach.
+
+Works with code, text, markdown, JSON, logs, configs — anything text-based. Use it for:
+- **Code review** — four different perspectives on your PR, architecture, or bug
+- **Document analysis** — legal, technical, research docs analyzed from multiple angles
+- **Debugging** — paste a stack trace and let them argue about the root cause
+- **Writing feedback** — drop in a draft and get editorial notes from four different voices
 
 ### Export chat
 Save any conversation as a clean markdown file. Click the download button in the header or hit **Cmd+E**. Output includes all messages with agent names, models used, and timestamps.
