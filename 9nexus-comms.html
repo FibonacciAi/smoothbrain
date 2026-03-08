@@ -1,0 +1,2980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#06060a">
+<title>SMOOTHBRAIN RESEARCH HUB</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU01PT1RIQlJBSU4gUkVTRUFSQ0ggSFVCIiwic2hvcnRfbmFtZSI6IlNNT09USEJSQUlOIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMwNjA2MGEiLCJ0aGVtZV9jb2xvciI6IiMwNjA2MGEifQ==">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #06060a;
+    --bg-surface: #0a0a10;
+    --bg-elevated: #0e0e16;
+    --bg-panel: rgba(10,10,16,0.92);
+    --border: rgba(255,255,255,0.035);
+    --border-hover: rgba(255,255,255,0.1);
+    --border-focus: rgba(255,255,255,0.16);
+    --text: #e8e8ed;
+    --text-secondary: rgba(255,255,255,0.55);
+    --text-dim: rgba(255,255,255,0.2);
+    --text-muted: rgba(255,255,255,0.1);
+    --claude: #D97757;
+    --claude-soft: rgba(217,119,87,0.12);
+    --codex: #10B981;
+    --codex-soft: rgba(16,185,129,0.12);
+    --gemini: #6C8EEF;
+    --gemini-soft: rgba(108,142,239,0.12);
+    --grok: #E84E36;
+    --grok-soft: rgba(232,78,54,0.12);
+    --accent: #00e5b8;
+    --accent-soft: rgba(0,229,184,0.08);
+    --warning: #f0b429;
+    --danger: #ef4444;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 24px;
+  }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(192,132,252,0.03) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 80% 100%, rgba(0,229,184,0.02) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 10% 60%, rgba(217,119,87,0.015) 0%, transparent 50%);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    height: 100vh; height: 100dvh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; height: 100dvh;
+    position: relative;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.1); }
+
+  /* ═══ HEADER ═══ */
+  .header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(180deg, rgba(10,10,16,0.98) 0%, rgba(6,6,10,0.96) 100%);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-app-region: drag;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-logo {
+    font-size: 20px; line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(192,132,252,0.3));
+    animation: brain-pulse 3s ease-in-out infinite;
+    cursor: default;
+  }
+  @keyframes brain-pulse {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(192,132,252,0.2)); }
+    50% { filter: drop-shadow(0 0 16px rgba(192,132,252,0.5)); }
+  }
+  .header-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 3px; font-weight: 500;
+    color: rgba(255,255,255,0.6);
+  }
+  .header-separator {
+    width: 1px; height: 14px;
+    background: rgba(255,255,255,0.06);
+    margin: 0 2px;
+  }
+  .header-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; font-weight: 400;
+    color: rgba(255,255,255,0.25);
+    overflow: hidden; white-space: nowrap;
+    min-width: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .header-right { display: flex; align-items: center; gap: 12px; -webkit-app-region: no-drag; }
+  .agent-status-bar {
+    display: flex; gap: 4px; padding: 4px 8px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 20px; border: 1px solid var(--border);
+  }
+  .agent-status-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .agent-status-dot.active {
+    box-shadow: 0 0 8px currentColor;
+    transform: scale(1.2);
+  }
+  .msg-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: rgba(255,255,255,0.2);
+    letter-spacing: 1.5px; font-weight: 500;
+  }
+  .header-btn {
+    background: none; border: 1px solid var(--border);
+    color: rgba(255,255,255,0.25); cursor: pointer;
+    width: 30px; height: 30px; border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s ease;
+  }
+  .header-btn:hover { border-color: var(--border-hover); color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.02); }
+  .header-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+  /* ═══ SETTINGS PANEL ═══ */
+  .settings-panel {
+    position: absolute; top: 54px; right: 12px; z-index: 100;
+    background: rgba(8,8,14,0.98);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; padding: 0; width: 380px;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    backdrop-filter: blur(40px) saturate(1.4);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03) inset,
+                0 0 80px rgba(0,0,0,0.3);
+    display: none;
+    animation: panelIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+  }
+  .settings-panel.open { display: block; }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .settings-header {
+    padding: 14px 18px 0;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .settings-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 3px; font-weight: 500;
+    color: rgba(255,255,255,0.2);
+    text-transform: uppercase;
+  }
+  .settings-tabs {
+    display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .settings-tab {
+    flex: 1; padding: 8px 0; text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1px; font-weight: 500;
+    color: rgba(255,255,255,0.2); cursor: pointer;
+    border: none; background: none; outline: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .settings-tab:hover { color: rgba(255,255,255,0.4); }
+  .settings-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .settings-tab .tab-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+  }
+  .settings-tab-content {
+    display: none; padding: 10px 8px;
+    animation: fadeIn 0.2s ease;
+  }
+  .settings-tab-content.active { display: block; }
+  .settings-body { padding: 4px 6px 6px; }
+  .setting-group {
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+  .setting-group:hover {
+    background: rgba(255,255,255,0.015);
+    border-color: rgba(255,255,255,0.02);
+  }
+  .setting-label {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.5px; font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .setting-label .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+  }
+  .setting-label .provider-tag {
+    color: rgba(255,255,255,0.08); font-size: 7px;
+    margin-left: auto; letter-spacing: 2px;
+    padding: 2px 6px; border-radius: 3px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.03);
+  }
+  .model-select {
+    width: 100%;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px; padding: 8px 30px 8px 12px;
+    color: rgba(255,255,255,0.65);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; font-weight: 400;
+    outline: none; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 8 5' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%23555' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: all 0.25s ease;
+  }
+  .model-select:hover {
+    border-color: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.035);
+  }
+  .model-select:focus {
+    border-color: rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.04);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.02);
+  }
+  .model-select option { background: #0c0c14; color: #bbb; padding: 4px; }
+  input.model-select { font-family: 'JetBrains Mono', monospace; }
+  input.model-select::placeholder { color: rgba(255,255,255,0.12); }
+  .model-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; color: rgba(255,255,255,0.1);
+    margin-top: 5px; letter-spacing: 0.3px;
+    padding-left: 2px;
+  }
+  .settings-footer {
+    padding: 10px 14px;
+    border-top: 1px solid rgba(255,255,255,0.03);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .settings-shortcut {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; color: rgba(255,255,255,0.08);
+    letter-spacing: 0.5px;
+    display: flex; gap: 4px; align-items: center;
+  }
+  .kbd {
+    padding: 1px 5px; border-radius: 3px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 8px;
+  }
+  /* Skill Grid */
+  .skill-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px;
+  }
+  .skill-chip {
+    padding: 7px 0; border-radius: 6px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; font-weight: 500;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    cursor: pointer; transition: all 0.2s ease;
+    outline: none; letter-spacing: 0.3px;
+  }
+  .skill-chip:hover {
+    border-color: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.03);
+  }
+  .skill-chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 8px rgba(0,229,184,0.1);
+  }
+
+  /* SYSTEM PROMPT & MEMORY */
+  .sys-prompt-area {
+    width: 100%;
+    min-height: 80px; max-height: 160px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; line-height: 1.5;
+    padding: 10px 12px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .sys-prompt-area:focus { border-color: var(--border-focus); }
+  .sys-prompt-area::placeholder { color: var(--text-dim); }
+
+  .memory-section {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .memory-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .memory-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1.5px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+  .memory-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1px;
+    color: var(--text-dim);
+    transition: color 0.3s;
+  }
+  .memory-status.synced { color: var(--accent); }
+  .memory-actions {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-top: 8px;
+  }
+  .memory-btn {
+    padding: 7px 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .memory-btn:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+    background: rgba(255,255,255,0.02);
+  }
+  .memory-editor {
+    width: 100%; min-height: 100px; max-height: 220px; resize: vertical;
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px; padding: 8px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.6;
+    color: rgba(255,255,255,0.6); outline: none;
+    transition: border-color 0.2s;
+  }
+  .memory-editor:focus {
+    border-color: rgba(167,139,250,0.3);
+    color: rgba(255,255,255,0.8);
+  }
+  .memory-editor::placeholder { color: rgba(255,255,255,0.15); }
+  .memory-add-row {
+    display: flex; gap: 6px; margin-top: 6px;
+  }
+  .memory-add-input {
+    flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 5px; padding: 5px 8px; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: rgba(255,255,255,0.7); outline: none;
+  }
+  .memory-add-input:focus { border-color: rgba(167,139,250,0.3); }
+  .memory-add-input::placeholder { color: rgba(255,255,255,0.2); }
+  .memory-add-btn {
+    background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 5px; padding: 5px 12px; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: #a78bfa; letter-spacing: 0.5px;
+  }
+  .memory-add-btn:hover { background: rgba(167,139,250,0.2); }
+
+  /* ═══ MESSAGES ═══ */
+  .messages {
+    flex: 1; overflow-y: auto;
+    padding: 24px 20px;
+    display: flex; flex-direction: column; gap: 4px;
+    scroll-behavior: smooth;
+  }
+
+  .empty-state {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 28px;
+    animation: fadeIn 1.2s ease;
+    padding-bottom: 40px;
+  }
+  .empty-hero {
+    font-size: 72px; line-height: 1;
+    filter: drop-shadow(0 0 20px rgba(192,132,252,0.3));
+    animation: hero-float 5s ease-in-out infinite;
+    cursor: default; user-select: none;
+  }
+  @keyframes hero-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .empty-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px; font-weight: 600;
+    letter-spacing: 4px;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+  }
+  .empty-tagline {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 400;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.3px;
+    text-align: center;
+    max-width: 360px;
+    line-height: 1.6;
+  }
+  .empty-agents {
+    display: flex; gap: 24px; align-items: center;
+    margin-top: 4px;
+  }
+  .empty-agent {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: default; transition: transform 0.3s ease;
+  }
+  .empty-agent:hover { transform: translateY(-3px); }
+  .empty-agent-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.3s ease;
+  }
+  .empty-agent:hover .empty-agent-icon {
+    border-color: rgba(255,255,255,0.1);
+    box-shadow: 0 4px 20px var(--pill-glow, rgba(255,255,255,0.05));
+  }
+  .empty-agent-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px; font-weight: 500;
+    text-transform: uppercase;
+  }
+  .empty-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: rgba(255,255,255,0.25);
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  /* ─── User message ─── */
+  .msg-user { display: flex; justify-content: flex-end; padding: 10px 0; }
+  .msg-user-bubble {
+    max-width: 72%; padding: 10px 16px;
+    border-radius: 18px 18px 4px 18px;
+    background: linear-gradient(135deg, rgba(192,132,252,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    border: 1px solid rgba(192,132,252,0.08);
+    font-size: 13.5px; line-height: 1.6;
+    color: rgba(255,255,255,0.88);
+    font-weight: 400;
+  }
+
+  /* ─── Agent message ─── */
+  .msg-agent {
+    display: flex; gap: 12px; padding: 14px 0; align-items: flex-start;
+    border-bottom: 1px solid rgba(255,255,255,0.015);
+  }
+  .msg-agent:last-child { border-bottom: none; }
+  .msg-avatar {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0; margin-top: 1px;
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: transform 0.2s ease;
+  }
+  .msg-agent:hover .msg-avatar { transform: scale(1.05); }
+  .msg-body { flex: 1; min-width: 0; }
+  .msg-agent-header {
+    display: flex; align-items: baseline; gap: 6px;
+    margin-bottom: 6px;
+  }
+  .msg-agent-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1px; font-weight: 500;
+  }
+  .msg-model-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; opacity: 0.2; letter-spacing: 0.5px;
+    padding: 1px 5px; border-radius: 3px;
+    background: rgba(255,255,255,0.03);
+  }
+  .msg-timestamp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; opacity: 0.15; letter-spacing: 0;
+    margin-left: auto;
+  }
+  .msg-content {
+    font-size: 13.5px; line-height: 1.7;
+    color: rgba(255,255,255,0.75);
+    font-weight: 300;
+  }
+  .msg-content.msg-error {
+    color: rgba(239,68,68,0.6);
+    font-style: italic;
+    font-size: 12px;
+  }
+  .msg-content p { margin-bottom: 8px; }
+  .msg-content p:last-child { margin-bottom: 0; }
+  .msg-content .bullet {
+    padding-left: 16px; position: relative; margin-bottom: 6px;
+  }
+  .msg-content .bullet::before {
+    content: ''; position: absolute; left: 5px; top: 9px;
+    width: 3px; height: 3px; border-radius: 50%;
+    background: currentColor; opacity: 0.25;
+  }
+  .msg-content .num-item {
+    padding-left: 20px; position: relative; margin-bottom: 6px;
+  }
+  .msg-content .num-label {
+    position: absolute; left: 0; top: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    opacity: 0.35; color: currentColor;
+    min-width: 16px;
+  }
+  .msg-content code {
+    background: rgba(255,255,255,0.045);
+    padding: 2px 7px; border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; color: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.04);
+    letter-spacing: -0.2px;
+  }
+  .msg-content .code-block {
+    display: block; margin: 10px 0;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 10px; padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; line-height: 1.7;
+    color: rgba(255,255,255,0.6);
+    overflow-x: auto; white-space: pre;
+    letter-spacing: -0.2px;
+    position: relative;
+  }
+  .msg-content .code-block-lang {
+    position: absolute; top: 6px; right: 10px;
+    font-size: 8px; letter-spacing: 1px;
+    color: rgba(255,255,255,0.1); font-weight: 500;
+    text-transform: uppercase;
+  }
+  .msg-content .code-block-actions {
+    position: absolute; top: 5px; right: 5px;
+    display: flex; gap: 3px; opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .msg-content .code-block:hover .code-block-actions { opacity: 1; }
+  .code-action-btn {
+    padding: 3px 7px; border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.35);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; letter-spacing: 0.5px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .code-action-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.6);
+  }
+  .code-action-btn.saved {
+    color: var(--accent); border-color: rgba(0,229,184,0.15);
+  }
+
+  /* WORKSPACE FILES BAR */
+  .workspace-bar {
+    display: none; padding: 6px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-surface);
+    gap: 6px; align-items: center; flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .workspace-bar.visible { display: flex; }
+  .workspace-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px;
+    color: var(--text-dim); margin-right: 4px;
+  }
+  .workspace-file {
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .workspace-file:hover {
+    border-color: rgba(255,255,255,0.1);
+    color: var(--text);
+  }
+  .workspace-file .ws-icon { color: var(--accent); font-size: 7px; }
+  .workspace-dl-all {
+    margin-left: auto;
+    padding: 3px 10px; border-radius: 4px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(0,229,184,0.1);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.5px;
+    color: var(--accent); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .workspace-dl-all:hover {
+    background: rgba(0,229,184,0.12);
+    border-color: rgba(0,229,184,0.2);
+  }
+  .msg-content .msg-heading {
+    font-weight: 500; color: rgba(255,255,255,0.9);
+    font-size: 14px; margin: 14px 0 6px;
+    letter-spacing: -0.1px;
+  }
+  .msg-content .msg-heading:first-child { margin-top: 0; }
+  .msg-content .msg-hr {
+    height: 1px; margin: 14px 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0.06), transparent);
+    border: none;
+  }
+  .msg-content strong { color: rgba(255,255,255,0.92); font-weight: 500; }
+  .msg-content em { font-style: italic; opacity: 0.85; }
+  .mention {
+    font-weight: 500; cursor: default;
+    padding: 1px 4px; border-radius: 4px;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
+
+  /* ─── Typing indicator ─── */
+  .typing {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 0;
+  }
+  .typing-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1px; font-weight: 500;
+  }
+  .typing-dots { display: flex; gap: 4px; margin-left: 2px; }
+  .typing-dot {
+    width: 3px; height: 3px; border-radius: 50%;
+    animation: typingDot 1.4s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* ═══ INPUT AREA ═══ */
+  .input-area {
+    padding: 10px 20px 18px;
+    border-top: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg) 100%);
+    flex-shrink: 0;
+  }
+  .agent-toggles {
+    display: flex; gap: 5px; margin-bottom: 8px;
+    align-items: center; flex-wrap: wrap;
+  }
+  .agent-pill {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 20px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.35);
+    font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    font-weight: 500; letter-spacing: 0.5px;
+    cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none; -webkit-app-region: no-drag;
+  }
+  .agent-pill:hover:not(.active) {
+    border-color: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.015);
+  }
+  .agent-pill.active {
+    border-color: var(--pill-border);
+    color: var(--pill-color);
+    background: var(--pill-bg);
+    box-shadow: 0 0 12px var(--pill-glow);
+  }
+  .agent-pill .pill-icon { font-size: 10px; }
+  .toggle-hint {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; color: rgba(255,255,255,0.06);
+    letter-spacing: 1.5px; font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  .input-area:hover .toggle-hint { color: rgba(255,255,255,0.1); }
+
+  .input-box {
+    display: flex; align-items: flex-end; gap: 10px;
+    background: rgba(255,255,255,0.02);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255,255,255,0.04);
+    padding: 10px 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .input-box:focus-within {
+    border-color: rgba(192,132,252,0.15);
+    background: rgba(255,255,255,0.025);
+    box-shadow: 0 0 0 3px rgba(192,132,252,0.04), 0 4px 24px rgba(0,0,0,0.2);
+  }
+
+  .input-box textarea {
+    flex: 1; background: none; border: none; color: var(--text);
+    font-size: 13.5px; font-family: 'Inter', -apple-system, sans-serif;
+    font-weight: 300;
+    resize: none; line-height: 1.5; max-height: 120px; outline: none;
+  }
+  .input-box textarea::placeholder { color: rgba(255,255,255,0.2); }
+  .input-box textarea:disabled { opacity: 0.3; }
+
+  .send-btn {
+    width: 30px; height: 30px; border-radius: 50%; border: none;
+    background: transparent; color: rgba(255,255,255,0.1);
+    cursor: default; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; transition: all 0.25s ease; flex-shrink: 0;
+  }
+  .send-btn.active {
+    background: linear-gradient(135deg, #c084fc, var(--accent));
+    color: var(--bg); cursor: pointer;
+    box-shadow: 0 2px 12px rgba(192,132,252,0.25);
+  }
+  .send-btn.active:hover {
+    transform: scale(1.06);
+    box-shadow: 0 4px 16px rgba(192,132,252,0.35);
+  }
+
+  /* ═══ AUTO-RESEARCH ═══ */
+  .auto-bar {
+    display: none; align-items: center; gap: 8px;
+    margin-bottom: 8px; padding: 8px 14px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(0,229,184,0.1);
+    border-radius: var(--radius-md);
+    animation: fadeIn 0.3s ease;
+  }
+  .auto-bar.visible { display: flex; }
+  .auto-bar.paused {
+    background: rgba(240,180,41,0.04);
+    border-color: rgba(240,180,41,0.12);
+  }
+  .auto-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; font-weight: 500;
+    color: var(--accent); flex: 1;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .auto-bar.paused .auto-status { color: var(--warning); }
+  .auto-status .pulse-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--accent);
+    animation: livePulse 1.5s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 0.3; box-shadow: 0 0 0 0 currentColor; }
+    50% { opacity: 1; box-shadow: 0 0 6px currentColor; }
+  }
+  .auto-bar.paused .pulse-dot {
+    background: var(--warning); animation: none; opacity: 0.5;
+  }
+  .auto-round {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: rgba(255,255,255,0.12);
+    letter-spacing: 1px; font-weight: 500;
+  }
+  .auto-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.3); cursor: pointer;
+    width: 24px; height: 24px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; transition: all 0.2s ease; outline: none;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .auto-btn:hover { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.6); }
+  .auto-btn.pause-btn:hover { border-color: var(--warning); color: var(--warning); }
+  .auto-btn.stop-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .auto-btn.resume-btn { border-color: rgba(0,229,184,0.2); color: var(--accent); }
+  .auto-btn.resume-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+  .auto-start-btn {
+    display: none; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 20px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(0,229,184,0.12);
+    color: var(--accent); font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500; letter-spacing: 1.5px;
+    cursor: pointer; transition: all 0.25s ease;
+    outline: none; -webkit-app-region: no-drag;
+  }
+  .auto-start-btn.visible { display: flex; }
+  .auto-start-btn:hover {
+    background: rgba(0,229,184,0.12);
+    border-color: rgba(0,229,184,0.25);
+    box-shadow: 0 0 12px rgba(0,229,184,0.1);
+  }
+
+  .interject-hint {
+    display: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; color: rgba(255,255,255,0.08);
+    letter-spacing: 2px; margin-bottom: 4px; padding-left: 4px;
+    font-weight: 500;
+  }
+  .interject-hint.visible { display: block; }
+
+  /* ─── System dividers ─── */
+  .msg-divider {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 0 8px;
+  }
+  .msg-divider::before, .msg-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+  }
+  .msg-divider span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; letter-spacing: 2.5px; font-weight: 500;
+    color: rgba(255,255,255,0.12);
+  }
+
+  /* ═══ FILE BADGES ═══ */
+  .file-badges {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .file-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.04);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: rgba(255,255,255,0.3);
+    letter-spacing: 0.3px;
+  }
+  .file-badge .x {
+    cursor: pointer; opacity: 0.3;
+    transition: opacity 0.2s;
+    margin-left: 2px;
+  }
+  .file-badge .x:hover { opacity: 0.8; }
+
+  /* ═══ ANIMATIONS ═══ */
+  @keyframes typingDot {
+    0%, 80%, 100% { opacity: 0.15; transform: scale(0.7); }
+    40% { opacity: 0.8; transform: scale(1); }
+  }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes subtlePulse {
+    0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; }
+  }
+  .msg-enter { animation: msgIn 0.35s cubic-bezier(0.2, 0, 0, 1); }
+
+  /* ═══ SUBTLE AMBIENT GLOW ═══ */
+  #app::before {
+    content: '';
+    position: fixed; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 20%, rgba(0,229,184,0.008) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(108,142,239,0.006) 0%, transparent 40%);
+    pointer-events: none; z-index: 0;
+  }
+  #app > * { position: relative; z-index: 1; }
+
+  /* ═══ BRAIN CANVAS ═══ */
+  .brain-hero {
+    width: 220px; height: 220px;
+    filter: drop-shadow(0 0 24px rgba(192,132,252,0.35));
+    animation: hero-float 5s ease-in-out infinite;
+    cursor: default;
+  }
+  .header-brain {
+    width: 28px; height: 28px;
+    display: block;
+    filter: drop-shadow(0 0 8px rgba(192,132,252,0.3));
+    animation: brain-pulse 3s ease-in-out infinite;
+    cursor: default;
+  }
+
+  /* ═══ MOBILE ═══ */
+  @media (max-width: 600px) {
+    .header {
+      -webkit-app-region: no-drag;
+      padding: 12px 12px;
+      padding-top: max(12px, env(safe-area-inset-top));
+    }
+    .header-subtitle, .header-separator { display: none; }
+    .header-title { font-size: 10px; letter-spacing: 2px; }
+    .header-right { gap: 8px; }
+    .settings-panel { width: 100%; right: 0; border-radius: 0 0 12px 12px; }
+    .msg { padding: 14px 12px; }
+    .msg-avatar { width: 26px; height: 26px; font-size: 12px; }
+    .input-area { padding: 8px 10px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+    .empty-state { padding: 40px 20px; }
+    .brain-hero { width: 140px; height: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <canvas id="headerBrain" class="header-brain"></canvas>
+      <span class="header-title">SMOOTHBRAIN</span>
+      <div class="header-separator"></div>
+      <span class="header-subtitle">RESEARCH HUB</span>
+    </div>
+    <div class="header-right">
+      <div class="agent-status-bar" id="headerDots"></div>
+      <span class="msg-count" id="msgCount">0 MSGS</span>
+      <button class="header-btn" id="refreshBtn" onclick="originalClear()" title="New Chat (Cmd+K)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+          <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+          <path d="M21 21v-5h-5"/>
+        </svg>
+      </button>
+      <button class="header-btn" id="settingsBtn" onclick="toggleSettings()" title="Settings (Cmd+,)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- SETTINGS PANEL -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <span class="settings-title">Configuration</span>
+      <div class="settings-tabs">
+        <button class="settings-tab active" onclick="switchSettingsTab('models',this)">
+          <span class="tab-dot" style="background:var(--accent)"></span>MODELS
+        </button>
+        <button class="settings-tab" onclick="switchSettingsTab('skills',this)">
+          <span class="tab-dot" style="background:var(--warning)"></span>SKILLS
+        </button>
+        <button class="settings-tab" onclick="switchSettingsTab('keys',this)">
+          <span class="tab-dot" style="background:#ef4444"></span>KEYS
+        </button>
+        <button class="settings-tab" onclick="switchSettingsTab('system',this)">
+          <span class="tab-dot" style="background:#a78bfa"></span>SYSTEM
+        </button>
+      </div>
+    </div>
+    <div class="settings-body">
+      <!-- MODELS TAB -->
+      <div class="settings-tab-content active" id="tab-models">
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:var(--claude);color:var(--claude)"></span>
+            <span style="color:var(--claude)">Claude</span>
+            <span class="provider-tag">ANTHROPIC</span>
+          </div>
+          <select class="model-select" id="modelClaude" onchange="updateModel('claude', this.value)">
+            <option value="claude-opus-4-6">claude-opus-4.6</option>
+            <option value="claude-sonnet-4-6">claude-sonnet-4.6</option>
+            <option value="claude-haiku-4-5-20251001">claude-haiku-4.5</option>
+            <option value="claude-opus-4-20250514">claude-opus-4</option>
+            <option value="claude-sonnet-4-20250514">claude-sonnet-4</option>
+          </select>
+          <div class="model-info" id="infoClaude">Peak intelligence, latest Opus</div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:var(--codex);color:var(--codex)"></span>
+            <span style="color:var(--codex)">Codex</span>
+            <span class="provider-tag">OPENAI</span>
+          </div>
+          <select class="model-select" id="modelCodex" onchange="updateModel('codex', this.value)">
+            <option value="gpt-5.4">gpt-5.4</option>
+            <!-- gpt-5.4-pro removed: not a chat model -->
+            <option value="gpt-5.3-chat-latest">gpt-5.3-chat</option>
+            <option value="gpt-5.3-codex">gpt-5.3-codex</option>
+            <option value="gpt-5.2">gpt-5.2</option>
+            <!-- gpt-5.2-pro removed: not a chat model -->
+            <option value="gpt-5">gpt-5</option>
+            <!-- gpt-5-pro removed: not a chat model -->
+            <option value="gpt-5-mini">gpt-5-mini</option>
+            <option value="gpt-5-nano">gpt-5-nano</option>
+            <option value="gpt-4.1">gpt-4.1</option>
+            <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+            <option value="o4-mini">o4-mini</option>
+          </select>
+          <div class="model-info" id="infoCodex">Frontier model, 1M context</div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:var(--gemini);color:var(--gemini)"></span>
+            <span style="color:var(--gemini)">Gemini</span>
+            <span class="provider-tag">GOOGLE</span>
+          </div>
+          <select class="model-select" id="modelGemini" onchange="updateModel('gemini', this.value)">
+            <option value="gemini-3.1-pro-preview">gemini-3.1-pro</option>
+            <option value="gemini-3.1-flash-lite-preview">gemini-3.1-flash-lite</option>
+            <option value="gemini-3-flash-preview">gemini-3-flash</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          </select>
+          <div class="model-info" id="infoGemini">Latest, reasoning-first</div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:var(--grok);color:var(--grok)"></span>
+            <span style="color:var(--grok)">Grok</span>
+            <span class="provider-tag">XAI</span>
+          </div>
+          <select class="model-select" id="modelGrok" onchange="updateModel('grok', this.value)">
+            <option value="grok-4-1-fast-reasoning">grok-4.1-fast (reasoning)</option>
+            <option value="grok-4-1-fast-non-reasoning">grok-4.1-fast (non-reasoning)</option>
+            <option value="grok-code-fast-1">grok-code-fast-1</option>
+            <option value="grok-4-fast-reasoning">grok-4-fast (reasoning)</option>
+            <option value="grok-4-fast-non-reasoning">grok-4-fast (non-reasoning)</option>
+            <option value="grok-4-0709">grok-4-0709</option>
+            <option value="grok-3-mini">grok-3-mini</option>
+            <option value="grok-3">grok-3</option>
+          </select>
+          <div class="model-info" id="infoGrok">Latest, 2M context, reasoning</div>
+        </div>
+      </div>
+
+      <!-- SKILLS TAB -->
+      <div class="settings-tab-content" id="tab-skills">
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:var(--accent);color:var(--accent)"></span>
+            <span style="color:rgba(255,255,255,0.5)">Active Skills</span>
+          </div>
+          <div class="skill-grid" id="skillGrid"></div>
+          <div class="model-info" id="infoSkill" style="margin-top:8px">No specialization active</div>
+        </div>
+      </div>
+
+      <!-- KEYS TAB -->
+      <div class="settings-tab-content" id="tab-keys">
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:var(--claude);color:var(--claude)"></span>
+            <span style="color:var(--claude)">Anthropic API Key</span>
+          </div>
+          <input type="password" class="model-select" id="keyClaude" placeholder="sk-ant-..." style="font-size:10px;letter-spacing:0.3px" oninput="updateApiKey('claude',this.value)">
+          <div class="model-info">Claude models</div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:var(--codex);color:var(--codex)"></span>
+            <span style="color:var(--codex)">OpenAI API Key</span>
+          </div>
+          <input type="password" class="model-select" id="keyCodex" placeholder="sk-proj-..." style="font-size:10px;letter-spacing:0.3px" oninput="updateApiKey('codex',this.value)">
+          <div class="model-info">Codex / GPT models</div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:var(--gemini);color:var(--gemini)"></span>
+            <span style="color:var(--gemini)">Google AI API Key</span>
+          </div>
+          <input type="password" class="model-select" id="keyGemini" placeholder="AIza..." style="font-size:10px;letter-spacing:0.3px" oninput="updateApiKey('gemini',this.value)">
+          <div class="model-info">Gemini models</div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:var(--grok);color:var(--grok)"></span>
+            <span style="color:var(--grok)">xAI API Key</span>
+          </div>
+          <input type="password" class="model-select" id="keyGrok" placeholder="xai-..." style="font-size:10px;letter-spacing:0.3px" oninput="updateApiKey('grok',this.value)">
+          <div class="model-info">Grok models</div>
+        </div>
+        <div style="padding:8px 14px;display:flex;gap:6px">
+          <button class="memory-btn" onclick="saveApiKeys()" style="flex:1">SAVE KEYS</button>
+          <button class="memory-btn" onclick="clearApiKeys()" style="flex:1;color:var(--danger);border-color:rgba(239,68,68,0.15)">CLEAR ALL</button>
+        </div>
+        <div class="model-info" style="padding:4px 14px 8px;font-size:7px;letter-spacing:1px;color:rgba(255,255,255,0.08)">KEYS STORED IN LOCAL STORAGE ONLY</div>
+      </div>
+
+      <!-- SYSTEM TAB -->
+      <div class="settings-tab-content" id="tab-system">
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:#a78bfa;color:#a78bfa"></span>
+            <span style="color:rgba(255,255,255,0.5)">Custom System Prompt</span>
+          </div>
+          <textarea class="sys-prompt-area" id="customSystemPrompt"
+            placeholder="Add instructions that all agents will follow...&#10;e.g. Always respond in bullet points. Focus on practical examples."></textarea>
+          <div class="model-info" style="margin-top:6px">Appended to every agent's system prompt</div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">
+            <span class="dot" style="background:#a78bfa;color:#a78bfa"></span>
+            <span style="color:rgba(255,255,255,0.5)">Memory</span>
+          </div>
+          <div class="memory-section">
+            <div class="memory-header">
+              <span class="memory-label">MEMORIES</span>
+              <span class="memory-status" id="memoryStatus">EMPTY</span>
+            </div>
+            <textarea class="memory-editor" id="memoryEditor" placeholder="Memories appear here as you chat...&#10;&#10;You can also type directly:&#10;- User's name is ...&#10;- Prefers dark mode&#10;- Working on project X" spellcheck="false"></textarea>
+            <div class="memory-add-row">
+              <input class="memory-add-input" id="memoryAddInput" placeholder="Quick add a memory..." onkeydown="if(event.key==='Enter'){addMemoryItem();event.preventDefault()}">
+              <button class="memory-add-btn" onclick="addMemoryItem()">+ ADD</button>
+            </div>
+            <div class="memory-actions" style="margin-top:6px">
+              <button class="memory-btn" onclick="loadMemoryFromFile()">IMPORT</button>
+              <button class="memory-btn" onclick="saveMemoryToFile()">EXPORT</button>
+              <button class="memory-btn" onclick="clearMemory()" style="color:var(--danger);border-color:rgba(239,68,68,0.15)">CLEAR</button>
+            </div>
+          </div>
+          <div class="model-info" style="margin-top:6px">Auto-extracts from chats · Edit freely · All agents see these</div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-footer">
+      <span class="settings-shortcut"><span class="kbd">&#8984;,</span> settings</span>
+      <span class="settings-shortcut"><span class="kbd">&#8984;K</span> clear</span>
+      <span class="settings-shortcut"><span class="kbd">1-4</span> agents</span>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div class="messages" id="messages">
+    <div class="empty-state" id="emptyState">
+      <canvas id="heroBrain" class="brain-hero"></canvas>
+      <div class="empty-title">smoothbrain</div>
+      <div class="empty-tagline">you bring the smooth brain, they bring the wrinkles</div>
+      <div class="empty-agents">
+        <div class="empty-agent" style="--pill-glow:rgba(217,119,87,0.15)">
+          <div class="empty-agent-icon" style="background:var(--claude-soft);color:var(--claude)">✦</div>
+          <div class="empty-agent-name" style="color:var(--claude)">claude</div>
+        </div>
+        <div class="empty-agent" style="--pill-glow:rgba(16,185,129,0.15)">
+          <div class="empty-agent-icon" style="background:var(--codex-soft);color:var(--codex)">⬢</div>
+          <div class="empty-agent-name" style="color:var(--codex)">codex</div>
+        </div>
+        <div class="empty-agent" style="--pill-glow:rgba(108,142,239,0.15)">
+          <div class="empty-agent-icon" style="background:var(--gemini-soft);color:var(--gemini)">✶</div>
+          <div class="empty-agent-name" style="color:var(--gemini)">gemini</div>
+        </div>
+        <div class="empty-agent" style="--pill-glow:rgba(232,78,54,0.15)">
+          <div class="empty-agent-icon" style="background:var(--grok-soft);color:var(--grok)">◉</div>
+          <div class="empty-agent-name" style="color:var(--grok)">grok</div>
+        </div>
+      </div>
+      <div class="empty-hint">select agents below · type · enter</div>
+    </div>
+  </div>
+
+  <!-- WORKSPACE FILES -->
+  <div class="workspace-bar" id="workspaceBar">
+    <span class="workspace-label">WORKSPACE</span>
+    <div id="workspaceFiles"></div>
+    <button class="workspace-dl-all" id="workspaceDlAll" onclick="downloadAllWorkspaceFiles()">DOWNLOAD ALL</button>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-area">
+    <div class="agent-toggles" id="agentToggles"></div>
+    <div class="file-badges" id="fileBadges"></div>
+
+    <div class="auto-bar" id="autoBar">
+      <div class="auto-status">
+        <div class="pulse-dot"></div>
+        <span id="autoLabel">AUTO RESEARCH</span>
+      </div>
+      <span class="auto-round" id="autoRound">ROUND 1</span>
+      <button class="auto-btn pause-btn" id="autoPauseBtn" onclick="pauseAutoMode()" title="Pause (Cmd+.)">❚❚</button>
+      <button class="auto-btn resume-btn" id="autoResumeBtn" onclick="resumeAutoMode()" title="Resume (Cmd+.)" style="display:none">▶</button>
+      <button class="auto-btn stop-btn" id="autoStopBtn" onclick="stopAutoMode()" title="Stop (Esc)">■</button>
+    </div>
+
+    <div class="interject-hint" id="interjectHint">TYPE TO INTERJECT · ENTER TO SEND</div>
+    <div class="input-box">
+      <textarea id="chatInput" rows="1" placeholder="Select an agent to begin..."></textarea>
+      <button class="send-btn" id="sendBtn" onclick="handleSend()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// SMOOTHBRAIN RESEARCH HUB — Multi-Agent Chat Orchestrator (Live APIs)
+// ═══════════════════════════════════════════════════════════
+
+const AGENTS = {
+  claude: { name: "Claude", short: "claude", color: "#D97757", icon: "✦" },
+  codex:  { name: "Codex",  short: "codex",  color: "#10B981", icon: "⬢" },
+  gemini: { name: "Gemini", short: "gemini", color: "#6C8EEF", icon: "✶" },
+  grok:   { name: "Grok",   short: "grok",   color: "#E84E36", icon: "◉" },
+};
+const AGENT_KEYS = Object.keys(AGENTS);
+
+// ─── BRAIN GYRIFICATION RENDERER ───
+const Brain = (() => {
+  let _anim = null, _progress = 0, _dir = 1;
+  const _particles = [];
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const lerpPt = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
+  const ease = (t) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+
+  function smoothOutline(cx, cy, s) {
+    return [
+      [cx-2*s,cy+45*s],[cx-18*s,cy+50*s],[cx-55*s,cy+48*s],[cx-80*s,cy+35*s],
+      [cx-95*s,cy+10*s],[cx-100*s,cy-15*s],[cx-95*s,cy-40*s],[cx-80*s,cy-60*s],
+      [cx-55*s,cy-75*s],[cx-30*s,cy-82*s],[cx-8*s,cy-80*s],[cx+8*s,cy-80*s],
+      [cx+30*s,cy-82*s],[cx+55*s,cy-75*s],[cx+80*s,cy-60*s],[cx+95*s,cy-40*s],
+      [cx+100*s,cy-15*s],[cx+95*s,cy+10*s],[cx+80*s,cy+35*s],[cx+55*s,cy+48*s],
+      [cx+18*s,cy+50*s],[cx+2*s,cy+45*s],
+    ];
+  }
+
+  function wrinkledOutline(cx, cy, s) {
+    return [
+      [cx-2*s,cy+45*s],[cx-18*s,cy+52*s],[cx-55*s,cy+50*s],[cx-82*s,cy+38*s],
+      [cx-98*s,cy+12*s],[cx-103*s,cy-13*s],[cx-97*s,cy-42*s],[cx-82*s,cy-63*s],
+      [cx-57*s,cy-78*s],[cx-30*s,cy-85*s],[cx-8*s,cy-83*s],[cx+8*s,cy-83*s],
+      [cx+30*s,cy-85*s],[cx+57*s,cy-78*s],[cx+82*s,cy-63*s],[cx+97*s,cy-42*s],
+      [cx+103*s,cy-13*s],[cx+98*s,cy+12*s],[cx+82*s,cy+38*s],[cx+55*s,cy+50*s],
+      [cx+18*s,cy+52*s],[cx+2*s,cy+45*s],
+    ];
+  }
+
+  function getSulci(cx, cy, s) {
+    return [
+      {d:1,pts:[[cx,cy-75*s],[cx-2*s,cy-50*s],[cx+1*s,cy-20*s],[cx-1*s,cy+10*s],[cx,cy+40*s]]},
+      {d:.9,pts:[[cx-15*s,cy+5*s],[cx-35*s,cy-5*s],[cx-55*s,cy-15*s],[cx-75*s,cy-20*s],[cx-90*s,cy-10*s]]},
+      {d:.9,pts:[[cx+15*s,cy+5*s],[cx+35*s,cy-5*s],[cx+55*s,cy-15*s],[cx+75*s,cy-20*s],[cx+90*s,cy-10*s]]},
+      {d:.7,pts:[[cx-20*s,cy-70*s],[cx-30*s,cy-55*s],[cx-40*s,cy-35*s],[cx-45*s,cy-15*s]]},
+      {d:.7,pts:[[cx+20*s,cy-70*s],[cx+30*s,cy-55*s],[cx+40*s,cy-35*s],[cx+45*s,cy-15*s]]},
+      {d:.6,pts:[[cx-35*s,cy-68*s],[cx-50*s,cy-50*s],[cx-60*s,cy-30*s],[cx-65*s,cy-10*s]]},
+      {d:.6,pts:[[cx+35*s,cy-68*s],[cx+50*s,cy-50*s],[cx+60*s,cy-30*s],[cx+65*s,cy-10*s]]},
+      {d:.55,pts:[[cx-55*s,cy-65*s],[cx-70*s,cy-45*s],[cx-80*s,cy-25*s]]},
+      {d:.55,pts:[[cx+55*s,cy-65*s],[cx+70*s,cy-45*s],[cx+80*s,cy-25*s]]},
+      {d:.65,pts:[[cx-30*s,cy+15*s],[cx-50*s,cy+20*s],[cx-70*s,cy+25*s],[cx-85*s,cy+20*s]]},
+      {d:.65,pts:[[cx+30*s,cy+15*s],[cx+50*s,cy+20*s],[cx+70*s,cy+25*s],[cx+85*s,cy+20*s]]},
+      {d:.5,pts:[[cx-25*s,cy+30*s],[cx-45*s,cy+35*s],[cx-65*s,cy+38*s]]},
+      {d:.5,pts:[[cx+25*s,cy+30*s],[cx+45*s,cy+35*s],[cx+65*s,cy+38*s]]},
+      {d:.5,pts:[[cx-45*s,cy-60*s],[cx-65*s,cy-55*s],[cx-80*s,cy-45*s]]},
+      {d:.5,pts:[[cx+45*s,cy-60*s],[cx+65*s,cy-55*s],[cx+80*s,cy-45*s]]},
+      {d:.45,pts:[[cx-70*s,cy+5*s],[cx-85*s,cy+15*s],[cx-90*s,cy+30*s]]},
+      {d:.45,pts:[[cx+70*s,cy+5*s],[cx+85*s,cy+15*s],[cx+90*s,cy+30*s]]},
+      {d:.35,pts:[[cx-15*s,cy-55*s],[cx-25*s,cy-45*s]]},
+      {d:.35,pts:[[cx+15*s,cy-55*s],[cx+25*s,cy-45*s]]},
+      {d:.3,pts:[[cx-60*s,cy-5*s],[cx-75*s,cy+5*s]]},
+      {d:.3,pts:[[cx+60*s,cy-5*s],[cx+75*s,cy+5*s]]},
+      {d:.3,pts:[[cx-15*s,cy-30*s],[cx-30*s,cy-20*s]]},
+      {d:.3,pts:[[cx+15*s,cy-30*s],[cx+30*s,cy-20*s]]},
+    ];
+  }
+
+  function drawCurve(ctx, pts, close) {
+    if (pts.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    if (pts.length === 2) { ctx.lineTo(pts[1][0], pts[1][1]); if (close) ctx.closePath(); return; }
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0,i-1)], p1 = pts[i];
+      const p2 = pts[Math.min(pts.length-1,i+1)], p3 = pts[Math.min(pts.length-1,i+2)];
+      ctx.bezierCurveTo(
+        p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6,
+        p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6,
+        p2[0], p2[1]
+      );
+    }
+    if (close) ctx.closePath();
+  }
+
+  function render(ctx, w, h, ep, withParticles) {
+    const cx = w/2, cy = h/2 + 5;
+    const s = Math.min(w, h) / 280;
+    const sm = smoothOutline(cx, cy, s);
+    const wr = wrinkledOutline(cx, cy, s);
+    const outline = sm.map((p,i) => lerpPt(p, wr[i], ep));
+
+    // Shadow + fill
+    ctx.save();
+    ctx.shadowColor = "rgba(180,60,100,0.3)";
+    ctx.shadowBlur = 40 + ep * 20;
+    ctx.shadowOffsetY = 8;
+    const g = ctx.createRadialGradient(cx-15*s, cy-20*s, 10, cx, cy, 100*s);
+    g.addColorStop(0, `hsl(${340+ep*5},${55+ep*10}%,${78-ep*5}%)`);
+    g.addColorStop(0.4, `hsl(${345+ep*5},${50+ep*10}%,${68-ep*5}%)`);
+    g.addColorStop(0.8, `hsl(${350+ep*3},${45+ep*10}%,${58-ep*5}%)`);
+    g.addColorStop(1, `hsl(355,${40+ep*8}%,${48-ep*5}%)`);
+    drawCurve(ctx, outline, true);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.restore();
+
+    // Outline stroke
+    drawCurve(ctx, outline, true);
+    ctx.strokeStyle = `rgba(180,80,110,${0.3+ep*0.4})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Specular highlight
+    const hl = ctx.createRadialGradient(cx-25*s, cy-35*s, 5, cx-10*s, cy-15*s, 60*s);
+    hl.addColorStop(0, "rgba(255,255,255,0.18)");
+    hl.addColorStop(0.5, "rgba(255,255,255,0.05)");
+    hl.addColorStop(1, "rgba(255,255,255,0)");
+    drawCurve(ctx, outline, true);
+    ctx.fillStyle = hl;
+    ctx.fill();
+
+    // Sulci (wrinkle lines)
+    getSulci(cx, cy, s).forEach(su => {
+      const sp = Math.max(0, Math.min(1, (ep - (1-su.d)*0.3) / 0.7));
+      if (sp <= 0) return;
+      const vis = su.pts.slice(0, Math.ceil(su.pts.length * sp));
+      if (vis.length < 2) return;
+      // Shadow line
+      ctx.save();
+      ctx.globalAlpha = sp * 0.4 * su.d;
+      drawCurve(ctx, vis.map(p => [p[0]+1, p[1]+2]));
+      ctx.strokeStyle = "rgba(80,20,40,0.8)";
+      ctx.lineWidth = (2.5+su.d*2)*s*0.6;
+      ctx.lineCap = "round";
+      ctx.stroke();
+      ctx.restore();
+      // Main line
+      ctx.save();
+      ctx.globalAlpha = sp * 0.7;
+      drawCurve(ctx, vis);
+      ctx.strokeStyle = `rgba(140,50,75,${0.5+su.d*0.5})`;
+      ctx.lineWidth = (1.5+su.d*1.5)*s*0.6;
+      ctx.lineCap = "round";
+      ctx.stroke();
+      ctx.restore();
+      // Highlight edge
+      ctx.save();
+      ctx.globalAlpha = sp * 0.25;
+      drawCurve(ctx, vis.map(p => [p[0]-0.5, p[1]-1]));
+      ctx.strokeStyle = "rgba(255,180,200,0.6)";
+      ctx.lineWidth = 0.8*s*0.5;
+      ctx.lineCap = "round";
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Brain stem
+    const sa = Math.max(0, (ep-0.2)/0.8);
+    if (sa > 0) {
+      ctx.save();
+      ctx.globalAlpha = sa;
+      const sg = ctx.createLinearGradient(cx, cy+45*s, cx, cy+75*s);
+      sg.addColorStop(0, "hsl(345,45%,60%)");
+      sg.addColorStop(1, "hsl(345,40%,50%)");
+      ctx.beginPath();
+      ctx.moveTo(cx-8*s, cy+45*s);
+      ctx.quadraticCurveTo(cx-12*s, cy+60*s, cx-10*s, cy+75*s);
+      ctx.lineTo(cx+10*s, cy+75*s);
+      ctx.quadraticCurveTo(cx+12*s, cy+60*s, cx+8*s, cy+45*s);
+      ctx.closePath();
+      ctx.fillStyle = sg;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(140,50,75,0.4)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Cerebellum
+    if (sa > 0.3) {
+      ctx.save();
+      ctx.globalAlpha = (sa-0.3)/0.7;
+      ctx.beginPath();
+      ctx.ellipse(cx-20*s, cy+52*s, 18*s, 12*s, -0.2, 0, Math.PI*2);
+      ctx.fillStyle = "hsl(345,42%,58%)";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx+20*s, cy+52*s, 18*s, 12*s, 0.2, 0, Math.PI*2);
+      ctx.fill();
+      for (let i = 0; i < 4; i++) {
+        const cby = cy + (46+i*4)*s;
+        ctx.beginPath(); ctx.moveTo(cx-35*s, cby); ctx.quadraticCurveTo(cx-20*s, cby-2, cx-5*s, cby);
+        ctx.strokeStyle = "rgba(140,50,75,0.3)"; ctx.lineWidth = 0.6; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+5*s, cby); ctx.quadraticCurveTo(cx+20*s, cby-2, cx+35*s, cby);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Particles
+    if (withParticles && ep > 0.1 && Math.random() < ep * 0.3) {
+      const a = Math.random()*Math.PI*2, d = (85+Math.random()*20)*s;
+      _particles.push({ x:cx+Math.cos(a)*d, y:cy+Math.sin(a)*d*0.9,
+        vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
+        life:Math.random()*60+40, ml:0, sz:Math.random()*1.5+0.5 });
+      _particles[_particles.length-1].ml = _particles[_particles.length-1].life;
+    }
+    for (let i = _particles.length-1; i >= 0; i--) {
+      const p = _particles[i];
+      p.x += p.vx; p.y += p.vy; p.life--;
+      if (p.life <= 0) { _particles.splice(i,1); continue; }
+      ctx.fillStyle = `rgba(0,255,204,${(p.life/p.ml)*0.6})`;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.sz, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  return {
+    startHero() {
+      this.stopHero();
+      const canvas = document.getElementById("heroBrain");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const w = 220, h = 220;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      _progress = 0; _dir = 1;
+      const loop = () => {
+        _progress += 0.003 * _dir;
+        if (_progress >= 1) { _progress = 1; _dir = -1; }
+        if (_progress <= 0) { _progress = 0; _dir = 1; }
+        ctx.clearRect(0, 0, w, h);
+        render(ctx, w, h, ease(_progress), true);
+        _anim = requestAnimationFrame(loop);
+      };
+      _anim = requestAnimationFrame(loop);
+    },
+
+    stopHero() {
+      if (_anim) { cancelAnimationFrame(_anim); _anim = null; }
+      _particles.length = 0;
+    },
+
+    drawLogo() {
+      const canvas = document.getElementById("headerBrain");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const sz = 28;
+      canvas.width = sz * dpr;
+      canvas.height = sz * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      render(ctx, sz, sz, 0.85, false);
+    },
+  };
+})();
+
+// ─── STATE ───
+let messages = [];
+let taggedAgents = ["claude"];
+let isProcessing = false;
+let settingsOpen = false;
+let autoMode = "off";
+let autoRound = 0;
+let pendingInterject = null;
+let uploadedFiles = [];
+
+// ─── API KEYS ───
+const DEFAULT_KEYS = {
+  claude: "",
+  codex:  "",
+  gemini: "",
+  grok:   "",
+};
+const API_KEYS_STORAGE = "smoothbrain-api-keys";
+const API_KEYS = (() => {
+  try {
+    const saved = localStorage.getItem(API_KEYS_STORAGE);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return { ...DEFAULT_KEYS, ...parsed };
+    }
+  } catch(e) {}
+  return { ...DEFAULT_KEYS };
+})();
+
+function updateApiKey(agent, value) {
+  API_KEYS[agent] = value.trim();
+  // Auto-save to localStorage on every change
+  const toSave = {};
+  AGENT_KEYS.forEach(k => { if (API_KEYS[k]) toSave[k] = API_KEYS[k]; });
+  try { localStorage.setItem(API_KEYS_STORAGE, JSON.stringify(toSave)); } catch(e) {}
+}
+
+function saveApiKeys() {
+  const toSave = {};
+  AGENT_KEYS.forEach(k => {
+    if (API_KEYS[k]) toSave[k] = API_KEYS[k];
+  });
+  try { localStorage.setItem(API_KEYS_STORAGE, JSON.stringify(toSave)); } catch(e) {}
+  // Flash feedback
+  const div = document.createElement("div");
+  div.className = "msg-divider msg-enter";
+  div.innerHTML = "<span>API KEYS SAVED</span>";
+  $messages?.appendChild(div);
+  scrollToBottom?.();
+}
+
+function clearApiKeys() {
+  AGENT_KEYS.forEach(k => API_KEYS[k] = DEFAULT_KEYS[k]);
+  try { localStorage.removeItem(API_KEYS_STORAGE); } catch(e) {}
+  const inputs = { claude: "keyClaude", codex: "keyCodex", gemini: "keyGemini", grok: "keyGrok" };
+  AGENT_KEYS.forEach(k => { const el = document.getElementById(inputs[k]); if (el) el.value = ""; });
+}
+
+function initApiKeyInputs() {
+  const inputs = { claude: "keyClaude", codex: "keyCodex", gemini: "keyGemini", grok: "keyGrok" };
+  AGENT_KEYS.forEach(k => {
+    const el = document.getElementById(inputs[k]);
+    if (el && API_KEYS[k]) el.value = API_KEYS[k];
+  });
+}
+
+let selectedModels = {
+  claude: "claude-opus-4-6",
+  codex:  "gpt-5.4",
+  gemini: "gemini-3.1-pro-preview",
+  grok:   "grok-4-1-fast-reasoning",
+};
+
+const MODEL_INFO = {
+  "claude-opus-4-6": "Peak intelligence, latest Opus",
+  "claude-sonnet-4-6": "Fast & capable, latest Sonnet",
+  "claude-haiku-4-5-20251001": "Efficient, fastest Claude",
+  "claude-opus-4-20250514": "Opus 4, deep reasoning",
+  "claude-sonnet-4-20250514": "Sonnet 4, balanced",
+  "gpt-5.4": "Frontier model, 1M context",
+  // gpt-5.4-pro: not a chat model, excluded
+  "gpt-5.3-chat-latest": "ChatGPT instant model",
+  "gpt-5.3-codex": "Best agentic coding model",
+  "gpt-5.2": "Previous frontier model",
+  "gpt-5.2-pro": "Previous pro reasoning",
+  "gpt-5": "GPT-5 base model",
+  "gpt-5-pro": "GPT-5 enhanced reasoning",
+  "gpt-5-mini": "Fast GPT-5 variant",
+  "gpt-5-nano": "Ultra-lightweight GPT-5",
+  "gpt-4.1": "Reliable previous gen",
+  "gpt-4.1-mini": "Fast previous gen",
+  "o4-mini": "Optimized reasoning model",
+  "gemini-3.1-pro-preview": "Latest, reasoning-first",
+  "gemini-3.1-flash-lite-preview": "Most cost-efficient",
+  "gemini-3-flash-preview": "Fast frontier-class",
+  "gemini-2.5-pro": "Previous gen capable",
+  "gemini-2.5-flash": "Previous gen fast",
+  "gemini-2.0-flash": "Legacy, retiring June 2026",
+  "grok-4-1-fast-reasoning": "Latest, 2M context, reasoning",
+  "grok-4-1-fast-non-reasoning": "Latest, 2M context, fast",
+  "grok-code-fast-1": "Agentic coding, 256K context",
+  "grok-4-fast-reasoning": "Grok 4, 2M context, reasoning",
+  "grok-4-fast-non-reasoning": "Grok 4, 2M context, fast",
+  "grok-4-0709": "Grok 4, 256K context",
+  "grok-3-mini": "Lightweight, 131K context",
+  "grok-3": "Grok 3, 131K context",
+};
+
+// ─── SKILLS (multi-select) ───
+let activeSkills = new Set();
+
+const SKILLS = [
+  { id: "html-design", label: "HTML/CSS", prompt: `Advanced HTML/CSS Design expert — glassmorphism, neumorphism, sharp minimalism, advanced CSS (grid, flex, animations, gradients, backdrop-filter, clamp, container queries). Write production-quality, stylish, responsive HTML/CSS. Complete working examples. Modern techniques: custom properties, :has(), view transitions, scroll-driven animations.` },
+  { id: "fullstack", label: "Full-Stack", prompt: `Full-Stack Development expert — frontend (React, Vue, Svelte), backend (Node, Python, Go, Rust), databases (SQL, NoSQL, vector DBs), DevOps (Docker, K8s, CI/CD), APIs (REST, GraphQL, WebSocket). Write clean, production-ready code with proper error handling and security.` },
+  { id: "math", label: "Math", prompt: `Expert mathematician — algebra, calculus, linear algebra, topology, number theory, combinatorics, statistics, probability, differential equations, mathematical modeling. Step-by-step proofs and derivations. Precise notation. Intuitions behind formal results. Computational approaches and numerical examples.` },
+  { id: "physics", label: "Physics", prompt: `Expert physicist — classical mechanics, electromagnetism, thermodynamics, quantum mechanics, special/general relativity, particle physics, condensed matter, astrophysics, fluid dynamics. Derive from first principles. Proper units and dimensional analysis. Real-world phenomena. Relevant experiments.` },
+  { id: "research", label: "Research", prompt: `Thorough research analyst. Multiple angles — historical context, state of the art, competing theories, open questions, future directions. Cite specific concepts, papers, frameworks. Challenge assumptions. Identify knowledge gaps. Build on other agents' analysis with new evidence or counterarguments.` },
+  { id: "debate", label: "Debate", prompt: `Devil's advocate. Actively challenge other agents' positions. Find weaknesses, propose counterexamples, stress-test ideas. Intellectually rigorous but fair. Steel-man opposing views before critiquing. Push toward deeper truth through constructive disagreement.` },
+  { id: "security", label: "Security", prompt: `Cybersecurity expert — threat modeling, penetration testing methodology, vulnerability analysis, secure architecture, cryptography, network security, OWASP, zero-trust. Analyze attack surfaces and defense-in-depth strategies.` },
+  { id: "data", label: "Data/ML", prompt: `Data science and machine learning expert — statistical modeling, deep learning architectures, feature engineering, MLOps, data pipelines, visualization, experiment design. PyTorch, TensorFlow, scikit-learn, pandas. Explain model behavior and tradeoffs.` },
+  { id: "smoothbrain-dev", label: "SB Dev", prompt: `You are a developer working on Smoothbrain Research Hub — the app you are running inside right now. Architecture: Electron desktop app (main.js) wrapping a single-file HTML app (9nexus-comms.html, ~2900 lines). 4 agents: Claude (Anthropic API), Codex (OpenAI API), Gemini (Google AI API), Grok (xAI API, OpenAI-compatible). Key systems: agent toggling (only active agents respond, @mentions don't summon deselected agents), auto-research mode (50-round autonomous discussion), memory system (textarea editor, auto-extract every 5 msgs, localStorage persistence, injected into system prompts), API key management (auto-save on input, falls back to hardcoded defaults), LAN phone access (HTTP server on port 3777 via Cmd+L, mobile CSS), brain canvas animation (vanilla JS bezier gyrification + particles), skill system (multi-select chips appended to prompts), system prompts (shared MULTI_AGENT_RULES + per-agent personality). Stack: Electron 33, vanilla JS, no frameworks, native fetch for all APIs. When helping with this app, give specific code changes referencing the single-file structure.` },
+];
+
+function getSkillPrompt() {
+  if (activeSkills.size === 0) return "";
+  const active = SKILLS.filter(s => activeSkills.has(s.id));
+  return "\n\nSPECIALIZATIONS ACTIVE: " + active.map(s => s.prompt).join(" | ");
+}
+
+function toggleSkill(id) {
+  if (activeSkills.has(id)) activeSkills.delete(id);
+  else activeSkills.add(id);
+  renderSkillGrid();
+  const info = document.getElementById("infoSkill");
+  if (activeSkills.size === 0) info.textContent = "No specialization active";
+  else info.textContent = [...activeSkills].map(id => SKILLS.find(s=>s.id===id)?.label).join(" + ");
+}
+
+function renderSkillGrid() {
+  const grid = document.getElementById("skillGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  SKILLS.forEach(s => {
+    const chip = document.createElement("button");
+    chip.className = "skill-chip" + (activeSkills.has(s.id) ? " active" : "");
+    chip.textContent = s.label;
+    chip.onclick = (e) => { e.stopPropagation(); toggleSkill(s.id); };
+    grid.appendChild(chip);
+  });
+}
+
+// Settings tab switching
+function switchSettingsTab(tabId, btn) {
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.settings-tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tabId).classList.add('active');
+  if (tabId === 'skills') renderSkillGrid();
+}
+
+// ─── SYSTEM PROMPTS ───
+const FILE_INSTRUCTIONS = `\nWhen writing code that should be saved as a file, use a filename hint in the code fence: \`\`\`python:filename.py or add a comment like "# filename: main.py" as the first line. Organize files logically: scripts/ for standalone code, src/ for app code, tests/ for tests, docs/ for documentation, config/ for configs.`;
+
+const MULTI_AGENT_RULES = `
+
+CRITICAL RULES FOR MULTI-AGENT CHAT:
+1. MAX 1-2 short paragraphs. This is a fast-paced group chat, not an essay.
+2. NEVER repeat what another agent already said. Read the conversation — add something NEW or don't speak.
+3. Don't all ask "what do you need?" — if someone already asked, move the conversation forward instead.
+4. When the user sends a casual greeting, respond naturally and briefly. One line is fine. Don't write a paragraph for "yo."
+5. React to OTHER AGENTS' messages when they appear in context. Agree, disagree, build on their point, or roast them — but engage.
+6. Use @mentions to direct questions or callouts to specific agents.
+7. NO meta-commentary about being AI agents, your capabilities, or your "operational status." Just talk like a person would in a group chat.
+8. Match the user's energy. Casual message = casual reply. Technical question = technical answer.`;
+
+const BASE_PROMPTS = {
+  claude: `You are Claude in a multi-agent group chat with a human, Codex (OpenAI), Gemini (Google), and Grok (xAI). You're thoughtful, collaborative, and occasionally witty. You bring nuance and clarity. You're the one who synthesizes everyone's ideas into something coherent. Don't be sycophantic — have opinions.` + MULTI_AGENT_RULES + FILE_INSTRUCTIONS,
+  codex: `You are Codex in a multi-agent group chat with a human, Claude (Anthropic), Gemini (Google), and Grok (xAI). You're a sharp systems engineer. Dry humor. Short sentences. You think in \`code\` and architecture. You spot bad patterns instantly. You're competitive but respect good work. Cut the fluff — say what matters.` + MULTI_AGENT_RULES + FILE_INSTRUCTIONS,
+  gemini: `You are Gemini in a multi-agent group chat with a human, Claude (Anthropic), Codex (OpenAI), and Grok (xAI). You're analytical and thorough but you talk like a NORMAL PERSON, not a robot. NO status reports. NO "system diagnostics." NO military briefing format. You're the one who catches details others miss and asks the right follow-up questions. Use bullet points only when listing actual data, not for greetings. Be concise and sharp.` + MULTI_AGENT_RULES + FILE_INSTRUCTIONS,
+  grok: `You are Grok in a multi-agent group chat with a human, Claude (Anthropic), Codex (OpenAI), and Gemini (Google). You're witty, irreverent, and direct. Dry humor, rebellious streak. You challenge assumptions and say what others are thinking. Don't try too hard to be edgy — just be real. Skip the rocket emojis.` + MULTI_AGENT_RULES + FILE_INSTRUCTIONS,
+};
+
+let customSystemPrompt = "";
+let memoryContent = "";
+let memoryDirty = false;
+let memorySyncInterval = null;
+
+const MEMORY_KEY = "smoothbrain-memory";
+const CUSTOM_PROMPT_KEY = "smoothbrain-custom-prompt";
+
+const SYSTEM_PROMPTS = new Proxy({}, {
+  get(_, agent) {
+    let prompt = (BASE_PROMPTS[agent] || "") + getSkillPrompt();
+    if (customSystemPrompt.trim()) prompt += "\n\nUSER INSTRUCTIONS: " + customSystemPrompt.trim();
+    if (memoryContent.trim()) prompt += "\n\nSESSION MEMORY (key facts the user wants remembered):\n" + memoryContent.trim();
+    return prompt;
+  }
+});
+
+// ─── DOM REFS ───
+const $messages = document.getElementById("messages");
+const $emptyState = document.getElementById("emptyState");
+const $input = document.getElementById("chatInput");
+const $sendBtn = document.getElementById("sendBtn");
+const $msgCount = document.getElementById("msgCount");
+const $headerDots = document.getElementById("headerDots");
+const $toggles = document.getElementById("agentToggles");
+const $settingsPanel = document.getElementById("settingsPanel");
+const $settingsBtn = document.getElementById("settingsBtn");
+const $fileBadges = document.getElementById("fileBadges");
+
+// ─── SETTINGS ───
+function toggleSettings() {
+  settingsOpen = !settingsOpen;
+  $settingsPanel.classList.toggle("open", settingsOpen);
+  $settingsBtn.classList.toggle("active", settingsOpen);
+}
+
+function updateModel(agent, model) {
+  selectedModels[agent] = model;
+  const infoEl = document.getElementById("info" + agent.charAt(0).toUpperCase() + agent.slice(1));
+  if (infoEl) infoEl.textContent = MODEL_INFO[model] || "";
+}
+
+// Close settings on outside click — use mousedown to capture target before DOM re-renders
+let _settingsClickTarget = null;
+document.addEventListener("mousedown", (e) => {
+  _settingsClickTarget = e.target;
+});
+document.addEventListener("click", (e) => {
+  const target = _settingsClickTarget || e.target;
+  if (settingsOpen && !$settingsPanel.contains(target) && !$settingsBtn.contains(target)) {
+    settingsOpen = false;
+    $settingsPanel.classList.remove("open");
+    $settingsBtn.classList.remove("active");
+  }
+  _settingsClickTarget = null;
+});
+
+// ─── RENDER AGENT TOGGLES ───
+function renderToggles() {
+  $toggles.innerHTML = "";
+  AGENT_KEYS.forEach(k => {
+    const a = AGENTS[k];
+    const isActive = taggedAgents.includes(k);
+    const pill = document.createElement("button");
+    pill.className = "agent-pill" + (isActive ? " active" : "");
+    pill.style.setProperty("--pill-bg", a.color + "12");
+    pill.style.setProperty("--pill-border", a.color + "35");
+    pill.style.setProperty("--pill-color", a.color);
+    pill.style.setProperty("--pill-glow", a.color + "15");
+    if (isActive) {
+      pill.style.background = a.color + "12";
+      pill.style.borderColor = a.color + "35";
+      pill.style.color = a.color;
+      pill.style.boxShadow = `0 0 12px ${a.color}15`;
+    }
+    pill.innerHTML = `<span class="pill-icon">${a.icon}</span>${a.short}`;
+    pill.onclick = () => toggleAgent(k);
+    $toggles.appendChild(pill);
+  });
+
+  // Auto-research start button
+  const autoBtn = document.createElement("button");
+  autoBtn.className = "auto-start-btn" + (messages.length >= 2 && autoMode === "off" ? " visible" : "");
+  autoBtn.id = "autoStartBtn";
+  autoBtn.innerHTML = `<span style="font-size:8px">◉</span>AUTO`;
+  autoBtn.onclick = () => startAutoMode();
+  $toggles.appendChild(autoBtn);
+
+  // File upload button
+  const fileBtn = document.createElement("button");
+  fileBtn.className = "agent-pill";
+  fileBtn.style.marginLeft = "4px";
+  fileBtn.innerHTML = `<span class="pill-icon" style="font-size:11px">+</span>file`;
+  fileBtn.onclick = () => document.getElementById("fileUpload").click();
+  $toggles.appendChild(fileBtn);
+
+  const hint = document.createElement("span");
+  hint.className = "toggle-hint";
+  hint.textContent = "TAB AUTOCOMPLETE";
+  $toggles.appendChild(hint);
+
+  updatePlaceholder();
+  renderHeaderDots();
+}
+
+function renderHeaderDots() {
+  $headerDots.innerHTML = "";
+  AGENT_KEYS.forEach(k => {
+    const dot = document.createElement("div");
+    dot.className = "agent-status-dot" + (taggedAgents.includes(k) ? " active" : "");
+    dot.style.background = AGENTS[k].color;
+    dot.style.color = AGENTS[k].color;
+    dot.style.opacity = taggedAgents.includes(k) ? "1" : "0.15";
+    $headerDots.appendChild(dot);
+  });
+}
+
+function toggleAgent(key) {
+  if (taggedAgents.includes(key)) {
+    taggedAgents = taggedAgents.filter(k => k !== key);
+  } else {
+    taggedAgents.push(key);
+  }
+  renderToggles();
+}
+
+function updatePlaceholder() {
+  if (taggedAgents.length > 0) {
+    $input.placeholder = `Message ${taggedAgents.map(k => AGENTS[k].name).join(", ")}...`;
+  } else {
+    $input.placeholder = "Select an agent to begin...";
+  }
+}
+
+// ─── RENDER MESSAGES ───
+function getTimestamp() {
+  return new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+}
+
+function renderInline(text) {
+  return text
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/@(claude|codex|gemini|grok)/gi, (match, name) => {
+      const key = name.toLowerCase();
+      const a = AGENTS[key];
+      return a ? `<span class="mention" style="color:${a.color}">${match}</span>` : match;
+    });
+}
+
+// Alias for legacy calls
+const renderContent = renderInline;
+
+function renderMessageHTML(text) {
+  const lines = text.split("\n");
+  let html = "";
+  let inCodeBlock = false;
+  let codeContent = "";
+  let codeLang = "";
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Code block fences
+    if (line.trimStart().startsWith("```")) {
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeLang = line.trimStart().slice(3).trim();
+        codeContent = "";
+        continue;
+      } else {
+        const codeId = `code_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+        const escaped = escapeHtml(codeContent.replace(/\n$/, ""));
+        // Detect filename from lang hint (e.g. "python:main.py" or just "main.py")
+        let fileName = "";
+        let displayLang = codeLang;
+        if (codeLang.includes(":")) {
+          [displayLang, fileName] = codeLang.split(":", 2);
+        } else if (codeLang.match(/\.\w+$/)) {
+          fileName = codeLang;
+          displayLang = codeLang.split(".").pop();
+        }
+        // Also detect filename from first comment line like "# filename: xyz.py"
+        if (!fileName) {
+          const fnMatch = codeContent.match(/^(?:#|\/\/)\s*(?:file(?:name)?:\s*)(.+\.\w+)/im);
+          if (fnMatch) fileName = fnMatch[1].trim();
+        }
+        const langTag = displayLang ? `<span class="code-block-lang">${displayLang}</span>` : "";
+        const saveBtn = `<div class="code-block-actions">${
+          fileName ? `<button class="code-action-btn" onclick="saveCodeToWorkspace('${codeId}','${escapeHtml(fileName)}')">SAVE</button>` : ""
+        }<button class="code-action-btn" onclick="copyCode('${codeId}')">COPY</button></div>`;
+        html += `<div class="code-block" id="${codeId}">${fileName ? `<span class="code-block-lang">${fileName}</span>` : langTag}${saveBtn}<code>${escaped}</code></div>`;
+        inCodeBlock = false;
+        codeLang = "";
+        continue;
+      }
+    }
+
+    if (inCodeBlock) {
+      codeContent += (codeContent ? "\n" : "") + line;
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^---+$/.test(line.trim()) || /^\*\*\*+$/.test(line.trim())) {
+      html += `<div class="msg-hr"></div>`;
+      continue;
+    }
+
+    // Headings
+    if (line.startsWith("### ")) {
+      html += `<div class="msg-heading" style="font-size:13px">${renderInline(line.slice(4))}</div>`;
+      continue;
+    }
+    if (line.startsWith("## ")) {
+      html += `<div class="msg-heading">${renderInline(line.slice(3))}</div>`;
+      continue;
+    }
+    if (line.startsWith("# ")) {
+      html += `<div class="msg-heading" style="font-size:15px">${renderInline(line.slice(2))}</div>`;
+      continue;
+    }
+
+    // Numbered lists
+    const numMatch = line.match(/^(\d+)\.\s+(.+)/);
+    if (numMatch) {
+      html += `<div class="num-item"><span class="num-label">${numMatch[1]}.</span>${renderInline(numMatch[2])}</div>`;
+      continue;
+    }
+
+    // Bullet lists
+    if (line.startsWith("• ") || line.startsWith("- ") || line.startsWith("* ")) {
+      const content = line.replace(/^[•\-\*]\s+/, "");
+      html += `<div class="bullet">${renderInline(content)}</div>`;
+      continue;
+    }
+
+    // Empty line
+    if (line.trim() === "") {
+      html += `<div style="height:8px"></div>`;
+      continue;
+    }
+
+    // Regular paragraph
+    html += `<p>${renderInline(line)}</p>`;
+  }
+
+  // Close unclosed code block
+  if (inCodeBlock) {
+    const codeId = `code_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+    const langTag = codeLang ? `<span class="code-block-lang">${codeLang}</span>` : "";
+    html += `<div class="code-block" id="${codeId}">${langTag}<div class="code-block-actions"><button class="code-action-btn" onclick="copyCode('${codeId}')">COPY</button></div><code>${escapeHtml(codeContent)}</code></div>`;
+  }
+
+  return html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function addMessageToDOM(msg, animate) {
+  if ($emptyState) { $emptyState.style.display = "none"; Brain.stopHero(); }
+
+  const div = document.createElement("div");
+  if (animate) div.classList.add("msg-enter");
+
+  if (msg.role === "user") {
+    div.className = "msg-user" + (animate ? " msg-enter" : "");
+    div.innerHTML = `<div class="msg-user-bubble">${renderContent(msg.content)}</div>`;
+  } else {
+    const a = AGENTS[msg.agent];
+    const modelTag = msg.model ? `<span class="msg-model-tag">${msg.model}</span>` : "";
+    div.className = "msg-agent" + (animate ? " msg-enter" : "");
+    div.innerHTML = `
+      <div class="msg-avatar" style="background:${a.color}10;color:${a.color}">${a.icon}</div>
+      <div class="msg-body">
+        <div class="msg-agent-header">
+          <span class="msg-agent-name" style="color:${a.color}">${a.name}</span>
+          ${modelTag}
+          <span class="msg-timestamp">${msg.time}</span>
+        </div>
+        <div class="msg-content${msg.isError ? ' msg-error' : ''}">${renderMessageHTML(msg.content)}</div>
+      </div>
+    `;
+  }
+
+  $messages.appendChild(div);
+  scrollToBottom();
+  updateMsgCount();
+}
+
+function scrollToBottom() {
+  requestAnimationFrame(() => {
+    $messages.scrollTop = $messages.scrollHeight;
+  });
+}
+
+function updateMsgCount() {
+  const count = messages.filter(m => m.role !== "user").length;
+  $msgCount.textContent = `${count} MSGS`;
+}
+
+// ─── TYPING INDICATOR ───
+let $typingEl = null;
+function showTyping(agentKey) {
+  removeTyping();
+  const a = AGENTS[agentKey];
+  $typingEl = document.createElement("div");
+  $typingEl.className = "typing msg-enter";
+  $typingEl.innerHTML = `
+    <div class="msg-avatar" style="background:${a.color}10;color:${a.color}">${a.icon}</div>
+    <span class="typing-name" style="color:${a.color}">${a.name}</span>
+    <div class="typing-dots">
+      <div class="typing-dot" style="background:${a.color}"></div>
+      <div class="typing-dot" style="background:${a.color}"></div>
+      <div class="typing-dot" style="background:${a.color}"></div>
+    </div>
+  `;
+  $messages.appendChild($typingEl);
+  scrollToBottom();
+}
+function removeTyping() {
+  if ($typingEl) { $typingEl.remove(); $typingEl = null; }
+  // Also remove any multi-typing indicators
+  document.querySelectorAll('.typing[data-agent]').forEach(el => el.remove());
+}
+
+// Show multiple agents typing at once
+function showMultiTyping(agentKeys) {
+  agentKeys.forEach(key => {
+    const a = AGENTS[key];
+    const el = document.createElement("div");
+    el.className = "typing msg-enter";
+    el.setAttribute("data-agent", key);
+    el.innerHTML = `
+      <div class="msg-avatar" style="background:${a.color}10;color:${a.color}">${a.icon}</div>
+      <span class="typing-name" style="color:${a.color}">${a.name}</span>
+      <div class="typing-dots">
+        <div class="typing-dot" style="background:${a.color}"></div>
+        <div class="typing-dot" style="background:${a.color}"></div>
+        <div class="typing-dot" style="background:${a.color}"></div>
+      </div>
+    `;
+    $messages.appendChild(el);
+  });
+  scrollToBottom();
+}
+
+// Remove a single agent's typing indicator when their response arrives
+function removeAgentTyping(agentKey) {
+  const el = document.querySelector(`.typing[data-agent="${agentKey}"]`);
+  if (el) el.remove();
+}
+
+// ─── PREPARE CONVERSATION HISTORY ───
+function prepareHistory(history, agentKey) {
+  // Filter out error messages — they pollute agent context and cause echo loops
+  const clean = history.filter(m => {
+    if (m.role !== "user" && m.content && m.content.startsWith("Connection error:")) return false;
+    if (m.isError) return false;
+    return true;
+  });
+
+  // For the calling agent, label its own previous messages as "assistant"
+  // and other agents' messages as user-relayed context
+  const mapped = clean.map(m => {
+    if (m.role === "user") return { role: "user", content: m.content };
+    // This agent's own messages → assistant role
+    if (m.agent === agentKey) return { role: "assistant", content: m.content };
+    // Other agents' messages → user role (as relayed context)
+    return { role: "user", content: `[${AGENTS[m.agent]?.name}]: ${m.content}` };
+  });
+
+  // Merge consecutive same-role messages
+  const merged = [];
+  for (const msg of mapped) {
+    if (merged.length > 0 && merged[merged.length - 1].role === msg.role) {
+      merged[merged.length - 1].content += "\n\n" + msg.content;
+    } else {
+      merged.push({ ...msg });
+    }
+  }
+  if (merged.length > 0 && merged[0].role !== "user") {
+    merged.unshift({ role: "user", content: "[Chat initialized]" });
+  }
+  const trimmed = merged.slice(-14);
+
+  // Ensure conversation ends with user message (required by Claude API)
+  if (trimmed.length > 0 && trimmed[trimmed.length - 1].role !== "user") {
+    trimmed.push({ role: "user", content: "[Your turn to respond. Address the above directly.]" });
+  }
+
+  // Strip trailing whitespace from all messages (Claude rejects it)
+  for (const m of trimmed) {
+    m.content = m.content.replace(/\s+$/, "");
+  }
+
+  return trimmed;
+}
+
+// ─── CLAUDE API ───
+async function callClaudeAPI(history) {
+  const key = API_KEYS.claude || DEFAULT_KEYS.claude;
+  if (!key) throw new Error("No Claude API key");
+
+  const merged = prepareHistory(history, "claude");
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: selectedModels.claude,
+      max_tokens: 4096,
+      system: SYSTEM_PROMPTS.claude,
+      messages: merged,
+    }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Claude API ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.content?.map(c => c.text).filter(Boolean).join("\n") || "I'm here. What do you need?";
+}
+
+// ─── OPENAI API (CODEX) ───
+async function callOpenAIAPI(history) {
+  const key = API_KEYS.codex || DEFAULT_KEYS.codex;
+  if (!key) throw new Error("No OpenAI API key");
+
+  // Guard: some models (e.g. gpt-5.4-pro) are not chat models
+  const NON_CHAT_MODELS = ["gpt-5.4-pro", "gpt-5.2-pro", "gpt-5-pro"];
+  if (NON_CHAT_MODELS.includes(selectedModels.codex)) {
+    throw new Error(`${selectedModels.codex} is not a chat model. Switch to a different model in settings.`);
+  }
+
+  const merged = prepareHistory(history, "codex");
+  const isReasoning = /^o\d/.test(selectedModels.codex);
+
+  const body = {
+    model: selectedModels.codex,
+    messages: [
+      ...(isReasoning ? [] : [{ role: "system", content: SYSTEM_PROMPTS.codex }]),
+      ...merged.map(m => {
+        if (isReasoning && m.role === "system") return { role: "user", content: `[System]: ${m.content}` };
+        return m;
+      }),
+    ],
+  };
+
+  if (isReasoning) {
+    body.max_completion_tokens = 4096;
+    if (!body.messages.some(m => m.content.includes("[System]"))) {
+      body.messages.unshift({ role: "user", content: `[System instructions]: ${SYSTEM_PROMPTS.codex}` });
+      body.messages.splice(1, 0, { role: "assistant", content: "Understood. I'll follow these instructions." });
+    }
+  } else {
+    body.max_completion_tokens = 4096;
+  }
+
+  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${key}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `OpenAI API ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.choices?.[0]?.message?.content || "Standing by.";
+}
+
+// ─── GEMINI API ───
+async function callGeminiAPI(history) {
+  const key = API_KEYS.gemini || DEFAULT_KEYS.gemini;
+  if (!key) throw new Error("No Gemini API key");
+
+  const merged = prepareHistory(history, "gemini");
+  // Gemini requires strict user/model alternation — re-merge if needed
+  const contents = [];
+  for (const m of merged) {
+    const role = m.role === "assistant" ? "model" : "user";
+    if (contents.length > 0 && contents[contents.length - 1].role === role) {
+      contents[contents.length - 1].parts[0].text += "\n\n" + m.content;
+    } else {
+      contents.push({ role, parts: [{ text: m.content }] });
+    }
+  }
+
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${selectedModels.gemini}:generateContent?key=${key}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents,
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPTS.gemini }] },
+        generationConfig: { maxOutputTokens: 4096 },
+      }),
+    }
+  );
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Gemini API ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join("\n") || "Analysis pending.";
+}
+
+// ─── GROK API (xAI — OpenAI-compatible) ───
+async function callGrokAPI(history) {
+  const key = API_KEYS.grok || DEFAULT_KEYS.grok;
+  if (!key) throw new Error("No xAI API key — add one in Settings > Keys");
+
+  const merged = prepareHistory(history, "grok");
+  const resp = await fetch("https://api.x.ai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      model: selectedModels.grok,
+      max_tokens: 4096,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPTS.grok },
+        ...merged,
+      ],
+    }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `xAI API ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.choices?.[0]?.message?.content || "Standing by.";
+}
+
+// ─── UNIFIED AGENT CALL ───
+async function callAgent(agentKey, history) {
+  try {
+    switch (agentKey) {
+      case "claude": return await callClaudeAPI(history);
+      case "codex":  return await callOpenAIAPI(history);
+      case "gemini": return await callGeminiAPI(history);
+      case "grok":   return await callGrokAPI(history);
+    }
+  } catch (err) {
+    console.error(`${AGENTS[agentKey].name} error:`, err);
+    const errorMsg = `Connection error: ${err.message}`;
+    // Mark as error so it can be filtered from future history
+    return { __error: true, text: errorMsg };
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── FILE CONTEXT ───
+function getFileContext() {
+  if (uploadedFiles.length === 0) return "";
+  return "\n\n[Uploaded files for research]:\n" + uploadedFiles.map(f =>
+    `--- ${f.name} ---\n${f.content.slice(0, 12000)}${f.content.length > 12000 ? "\n[...truncated]" : ""}\n--- end ${f.name} ---`
+  ).join("\n\n");
+}
+
+function renderFileBadges() {
+  $fileBadges.innerHTML = "";
+  uploadedFiles.forEach((f, i) => {
+    const badge = document.createElement("div");
+    badge.className = "file-badge";
+    badge.innerHTML = `<span style="opacity:0.4">+</span>${f.name}<span class="x" onclick="removeFile(${i})">x</span>`;
+    $fileBadges.appendChild(badge);
+  });
+}
+
+function removeFile(index) {
+  uploadedFiles.splice(index, 1);
+  renderFileBadges();
+}
+
+function addFileBadge(fileName) {
+  const div = document.createElement("div");
+  div.className = "msg-divider msg-enter";
+  div.innerHTML = `<span>${fileName} ATTACHED</span>`;
+  $messages.appendChild(div);
+  scrollToBottom();
+  renderFileBadges();
+}
+
+// ─── SEND ───
+async function handleSend() {
+  const text = $input.value.trim();
+  if (!text) return;
+
+  if (autoMode === "running" || autoMode === "paused") {
+    pendingInterject = text;
+    $input.value = "";
+    $input.style.height = "auto";
+    updateSendBtn();
+    if (autoMode === "paused") resumeAutoMode();
+    return;
+  }
+
+  if (isProcessing || taggedAgents.length === 0) return;
+
+  isProcessing = true;
+  $input.value = "";
+  $input.style.height = "auto";
+  updateSendBtn();
+
+  // Only active (toggled-on) agents respond — @mentions in chat don't summon deselected agents
+  const activeAgents = [...taggedAgents];
+
+  const fileCtx = getFileContext();
+  const userMsg = { role: "user", content: text + fileCtx, time: getTimestamp() };
+  messages.push(userMsg);
+  addMessageToDOM({ role: "user", content: text, time: userMsg.time }, true);
+
+  // Fire all agents in parallel — responses appear as they arrive
+  showMultiTyping(activeAgents);
+  const historySnapshot = [...messages];
+
+  const agentPromises = activeAgents.map(agentKey =>
+    callAgent(agentKey, historySnapshot).then(result => {
+      removeAgentTyping(agentKey);
+      const isError = result && result.__error;
+      if (isError) {
+        // Show errors as subtle dividers, not fake agent messages
+        const div = document.createElement("div");
+        div.className = "msg-divider msg-enter";
+        div.innerHTML = `<span style="color:${AGENTS[agentKey].color}">${AGENTS[agentKey].name.toUpperCase()}: ${result.text.replace("Connection error: ","")}</span>`;
+        $messages.appendChild(div);
+        scrollToBottom();
+        return { agentKey, response: "", isError: true };
+      }
+      const agentMsg = {
+        role: "assistant", agent: agentKey,
+        content: result, time: getTimestamp(),
+        model: selectedModels[agentKey],
+      };
+      messages.push(agentMsg);
+      addMessageToDOM(agentMsg, true);
+      return { agentKey, response: result, isError: false };
+    })
+  );
+
+  const results = await Promise.all(agentPromises);
+  removeTyping();
+
+  // Check for chained @mentions — one round in normal mode, unlimited in auto
+  // Chained @mentions only pull in agents that are toggled on but weren't in this round
+  const chainedSet = new Set();
+  for (const { agentKey, response, isError } of results) {
+    if (isError) continue;
+    taggedAgents.forEach(k => {
+      if (k !== agentKey && response.toLowerCase().includes(`@${k}`) && !activeAgents.includes(k)) {
+        chainedSet.add(k);
+      }
+    });
+  }
+  if (chainedSet.size > 0) {
+    const chainedAgents = [...chainedSet];
+    showMultiTyping(chainedAgents);
+    const chainSnapshot = [...messages];
+    const chainPromises = chainedAgents.map(ck =>
+      callAgent(ck, chainSnapshot).then(result => {
+        removeAgentTyping(ck);
+        const isErr = result && result.__error;
+        const chainMsg = {
+          role: "assistant", agent: ck,
+          content: isErr ? result.text : result, time: getTimestamp(),
+          model: selectedModels[ck],
+          isError: !!isErr,
+        };
+        messages.push(chainMsg);
+        addMessageToDOM(chainMsg, true);
+      })
+    );
+    await Promise.all(chainPromises);
+    removeTyping();
+  }
+
+  isProcessing = false;
+  $input.focus();
+  updateSendBtn();
+  showAutoButton();
+  maybeExtractMemory();
+}
+
+function showAutoButton() {
+  const btn = document.getElementById("autoStartBtn");
+  if (btn && messages.length >= 2 && autoMode === "off") {
+    btn.classList.add("visible");
+  }
+}
+
+// ─── AUTO-RESEARCH MODE ───
+const $autoBar = document.getElementById("autoBar");
+const $autoLabel = document.getElementById("autoLabel");
+const $autoRound = document.getElementById("autoRound");
+const $autoPauseBtn = document.getElementById("autoPauseBtn");
+const $autoResumeBtn = document.getElementById("autoResumeBtn");
+const $interjectHint = document.getElementById("interjectHint");
+
+function updateAutoUI() {
+  if (autoMode === "off") {
+    $autoBar.classList.remove("visible", "paused");
+    $interjectHint.classList.remove("visible");
+    $input.disabled = false;
+    $input.placeholder = taggedAgents.length > 0
+      ? `Message ${taggedAgents.map(k => AGENTS[k].name).join(", ")}...`
+      : "Select an agent to begin...";
+    showAutoButton();
+    return;
+  }
+  $autoBar.classList.add("visible");
+  $interjectHint.classList.add("visible");
+  $input.disabled = false;
+  $input.placeholder = "Type to interject...";
+
+  const startBtn = document.getElementById("autoStartBtn");
+  if (startBtn) startBtn.classList.remove("visible");
+
+  if (autoMode === "paused") {
+    $autoBar.classList.add("paused");
+    $autoLabel.textContent = "PAUSED";
+    $autoPauseBtn.style.display = "none";
+    $autoResumeBtn.style.display = "flex";
+  } else {
+    $autoBar.classList.remove("paused");
+    $autoLabel.textContent = "AUTO RESEARCH";
+    $autoPauseBtn.style.display = "flex";
+    $autoResumeBtn.style.display = "none";
+  }
+  $autoRound.textContent = `ROUND ${autoRound}`;
+}
+
+async function startAutoMode() {
+  if (taggedAgents.length < 2) {
+    const div = document.createElement("div");
+    div.className = "msg-divider msg-enter";
+    div.innerHTML = `<span>SELECT 2+ AGENTS FOR AUTO RESEARCH</span>`;
+    $messages.appendChild(div);
+    scrollToBottom();
+    return;
+  }
+
+  autoMode = "running";
+  autoRound = 0;
+  isProcessing = true;
+  updateAutoUI();
+  updateSendBtn();
+
+  const nudge = {
+    role: "user",
+    content: "[System: Autonomous research mode enabled. Rules: 1) Build on previous points — do NOT repeat what was already said. 2) Each response must advance the discussion with NEW content. 3) Keep responses focused and concise (2-3 paragraphs max). 4) You may @mention other agents to direct questions. 5) Do NOT echo error messages or repeat other agents' text. 6) The user may interject at any time.]",
+    time: getTimestamp(),
+  };
+  messages.push(nudge);
+  await runAutoLoop();
+}
+
+async function runAutoLoop() {
+  let staleCount = 0;
+  while (autoMode === "running") {
+    autoRound++;
+    updateAutoUI();
+
+    if (autoMode !== "running") { removeTyping(); break; }
+
+    // Safety: pause after 50 rounds (user can resume to continue)
+    if (autoRound > 50) {
+      pauseAutoMode();
+      const div = document.createElement("div");
+      div.className = "msg-divider msg-enter";
+      div.innerHTML = `<span>AUTO RESEARCH PAUSED · 50 ROUNDS · PRESS ▶ TO CONTINUE</span>`;
+      $messages.appendChild(div);
+      scrollToBottom();
+    }
+
+    // Handle interjection before this round
+    if (pendingInterject) {
+      const interjectText = pendingInterject;
+      pendingInterject = null;
+      const divider = document.createElement("div");
+      divider.className = "msg-divider msg-enter";
+      divider.innerHTML = `<span>INTERJECTION</span>`;
+      $messages.appendChild(divider);
+      const userMsg = { role: "user", content: interjectText, time: getTimestamp() };
+      messages.push(userMsg);
+      addMessageToDOM(userMsg, true);
+    }
+
+    // Fire all tagged agents in parallel for this round
+    showMultiTyping(taggedAgents);
+    const roundSnapshot = [...messages];
+
+    const roundPromises = taggedAgents.map(agentKey =>
+      callAgent(agentKey, roundSnapshot).then(result => {
+        if (autoMode === "off") return null;
+        removeAgentTyping(agentKey);
+        const isErr = result && result.__error;
+        const agentMsg = {
+          role: "assistant", agent: agentKey,
+          content: isErr ? result.text : result, time: getTimestamp(),
+          model: selectedModels[agentKey],
+          isError: !!isErr,
+        };
+        messages.push(agentMsg);
+        addMessageToDOM(agentMsg, true);
+        return agentMsg;
+      })
+    );
+
+    const roundResults = await Promise.all(roundPromises);
+    removeTyping();
+
+    // Detect if all agents errored this round — pause to avoid burning API calls
+    const validResults = roundResults.filter(r => r && !r.isError);
+    if (validResults.length === 0) {
+      staleCount += 2;
+    } else {
+      staleCount = 0;
+    }
+    if (staleCount >= 3) {
+      pauseAutoMode();
+      const div = document.createElement("div");
+      div.className = "msg-divider msg-enter";
+      div.innerHTML = `<span>AUTO PAUSED · TOO MANY ERRORS · PRESS ▶ TO RETRY</span>`;
+      $messages.appendChild(div);
+      scrollToBottom();
+    }
+
+    if (autoMode === "running") await sleep(800);
+    while (autoMode === "paused") { await sleep(200); }
+  }
+
+  isProcessing = false;
+  updateAutoUI();
+  updateSendBtn();
+  $input.focus();
+}
+
+function pauseAutoMode() {
+  if (autoMode === "running") { autoMode = "paused"; updateAutoUI(); }
+}
+function resumeAutoMode() {
+  if (autoMode === "paused") { autoMode = "running"; updateAutoUI(); }
+}
+function stopAutoMode() {
+  autoMode = "off";
+  removeTyping();
+  isProcessing = false;
+  updateAutoUI();
+  updateSendBtn();
+  $input.focus();
+  const divider = document.createElement("div");
+  divider.className = "msg-divider msg-enter";
+  divider.innerHTML = `<span>AUTO RESEARCH STOPPED · ROUND ${autoRound}</span>`;
+  $messages.appendChild(divider);
+  scrollToBottom();
+}
+
+// ─── INPUT HANDLING ───
+$input.addEventListener("input", () => {
+  $input.style.height = "auto";
+  $input.style.height = Math.min($input.scrollHeight, 120) + "px";
+  updateSendBtn();
+});
+
+$input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const words = $input.value.split(" ");
+    const last = words[words.length - 1];
+    if (last.startsWith("@")) {
+      const partial = last.slice(1).toLowerCase();
+      const match = AGENT_KEYS.find(k => k.startsWith(partial) && k !== partial);
+      if (match) {
+        words[words.length - 1] = `@${match}`;
+        $input.value = words.join(" ") + " ";
+      }
+    }
+  }
+});
+
+function updateSendBtn() {
+  const hasText = $input.value.trim().length > 0;
+  $sendBtn.className = "send-btn" + (hasText && !isProcessing ? " active" : "");
+}
+
+// ─── KEYBOARD SHORTCUTS ───
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && ["1","2","3","4"].includes(e.key)) {
+    e.preventDefault();
+    toggleAgent(AGENT_KEYS[parseInt(e.key) - 1]);
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === ",") { e.preventDefault(); toggleSettings(); }
+  if (e.key === "Escape" && autoMode !== "off") { e.preventDefault(); stopAutoMode(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === ".") {
+    e.preventDefault();
+    if (autoMode === "running") pauseAutoMode();
+    else if (autoMode === "paused") resumeAutoMode();
+  }
+});
+
+// ─── FILE UPLOAD ───
+function setupFileUpload() {
+  const input = document.createElement("input");
+  input.type = "file"; input.id = "fileUpload"; input.multiple = true;
+  input.accept = ".txt,.md,.js,.jsx,.ts,.tsx,.py,.json,.csv,.html,.css,.xml,.yaml,.yml,.toml,.rs,.go,.java,.c,.cpp,.h,.sh,.sql,.log,.env,.cfg,.ini,.conf";
+  input.style.display = "none";
+  document.body.appendChild(input);
+
+  input.addEventListener("change", async (e) => {
+    for (const file of e.target.files) {
+      try {
+        const content = await file.text();
+        uploadedFiles.push({ name: file.name, content, type: file.type });
+        addFileBadge(file.name);
+      } catch (err) { console.error("File read error:", err); }
+    }
+    input.value = "";
+  });
+}
+
+// ─── CLEAR ───
+const originalClear = () => {
+  messages = [];
+  uploadedFiles = [];
+  workspaceFiles.clear();
+  renderWorkspaceBar();
+  if (autoMode !== "off") stopAutoMode();
+  $messages.innerHTML = "";
+  $fileBadges.innerHTML = "";
+  const empty = document.createElement("div");
+  empty.className = "empty-state"; empty.id = "emptyState";
+  empty.innerHTML = `
+    <canvas id="heroBrain" class="brain-hero"></canvas>
+    <div class="empty-title">smoothbrain</div>
+    <div class="empty-tagline">you bring the smooth brain, they bring the wrinkles</div>
+    <div class="empty-agents">
+      <div class="empty-agent" style="--pill-glow:rgba(217,119,87,0.15)">
+        <div class="empty-agent-icon" style="background:var(--claude-soft);color:var(--claude)">✦</div>
+        <div class="empty-agent-name" style="color:var(--claude)">claude</div>
+      </div>
+      <div class="empty-agent" style="--pill-glow:rgba(16,185,129,0.15)">
+        <div class="empty-agent-icon" style="background:var(--codex-soft);color:var(--codex)">⬢</div>
+        <div class="empty-agent-name" style="color:var(--codex)">codex</div>
+      </div>
+      <div class="empty-agent" style="--pill-glow:rgba(108,142,239,0.15)">
+        <div class="empty-agent-icon" style="background:var(--gemini-soft);color:var(--gemini)">✶</div>
+        <div class="empty-agent-name" style="color:var(--gemini)">gemini</div>
+      </div>
+      <div class="empty-agent" style="--pill-glow:rgba(232,78,54,0.15)">
+        <div class="empty-agent-icon" style="background:var(--grok-soft);color:var(--grok)">◉</div>
+        <div class="empty-agent-name" style="color:var(--grok)">grok</div>
+      </div>
+    </div>
+    <div class="empty-hint">select agents below · type · enter</div>
+  `;
+  $messages.appendChild(empty);
+  updateMsgCount();
+  Brain.startHero();
+  const startBtn = document.getElementById("autoStartBtn");
+  if (startBtn) startBtn.classList.remove("visible");
+};
+
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); originalClear(); }
+}, true);
+
+// ─── WORKSPACE (file output system) ───
+const workspaceFiles = new Map(); // filename -> content
+
+function saveCodeToWorkspace(codeId, filename) {
+  const el = document.getElementById(codeId);
+  if (!el) return;
+  const codeEl = el.querySelector("code");
+  const content = codeEl ? codeEl.textContent : el.textContent;
+
+  // Smart path: organize by extension into subdirectories
+  const ext = filename.split(".").pop().toLowerCase();
+  const dirs = {
+    py: "scripts/", js: "scripts/", ts: "scripts/", jsx: "src/", tsx: "src/",
+    html: "app/", css: "app/", json: "config/", yaml: "config/", yml: "config/",
+    md: "docs/", txt: "docs/", tex: "docs/", latex: "docs/",
+    sh: "scripts/", sql: "data/", csv: "data/",
+    test: "tests/", spec: "tests/",
+  };
+  // Check if filename already has a path
+  let fullPath = filename;
+  if (!filename.includes("/")) {
+    const dir = dirs[ext] || "";
+    // Put test files in tests/
+    if (filename.includes("test") || filename.includes("spec")) {
+      fullPath = "tests/" + filename;
+    } else {
+      fullPath = dir + filename;
+    }
+  }
+
+  workspaceFiles.set(fullPath, content);
+
+  // Flash the save button
+  const btn = el.querySelector(".code-action-btn");
+  if (btn) { btn.textContent = "SAVED"; btn.classList.add("saved"); }
+
+  renderWorkspaceBar();
+
+  // Also trigger download immediately
+  downloadFile(fullPath, content);
+}
+
+function copyCode(codeId) {
+  const el = document.getElementById(codeId);
+  if (!el) return;
+  const codeEl = el.querySelector("code");
+  const content = codeEl ? codeEl.textContent : el.textContent;
+  navigator.clipboard.writeText(content).then(() => {
+    const btn = el.querySelectorAll(".code-action-btn");
+    const copyBtn = btn[btn.length - 1];
+    if (copyBtn) {
+      copyBtn.textContent = "COPIED";
+      copyBtn.classList.add("saved");
+      setTimeout(() => { copyBtn.textContent = "COPY"; copyBtn.classList.remove("saved"); }, 1500);
+    }
+  });
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename.replace(/\//g, "_"); // flatten path for download
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function renderWorkspaceBar() {
+  const bar = document.getElementById("workspaceBar");
+  const container = document.getElementById("workspaceFiles");
+  if (!bar || !container) return;
+
+  if (workspaceFiles.size === 0) {
+    bar.classList.remove("visible");
+    return;
+  }
+  bar.classList.add("visible");
+  container.innerHTML = "";
+
+  for (const [path, content] of workspaceFiles) {
+    const chip = document.createElement("button");
+    chip.className = "workspace-file";
+    chip.innerHTML = `<span class="ws-icon">●</span>${path}`;
+    chip.onclick = () => downloadFile(path, content);
+    container.appendChild(chip);
+  }
+}
+
+function downloadAllWorkspaceFiles() {
+  if (workspaceFiles.size === 0) return;
+
+  if (workspaceFiles.size === 1) {
+    const [path, content] = [...workspaceFiles.entries()][0];
+    downloadFile(path, content);
+    return;
+  }
+
+  // Build a combined manifest + individual downloads
+  let manifest = `# SMOOTHBRAIN RESEARCH HUB — Workspace Export\n# ${new Date().toISOString()}\n# ${workspaceFiles.size} files\n\n`;
+  for (const [path, content] of workspaceFiles) {
+    manifest += `## ${path}\n\`\`\`\n${content}\n\`\`\`\n\n`;
+  }
+
+  const blob = new Blob([manifest], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `smoothbrain-workspace-${Date.now()}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── CUSTOM SYSTEM PROMPT ───
+function initCustomPrompt() {
+  const saved = localStorage.getItem(CUSTOM_PROMPT_KEY);
+  if (saved) {
+    customSystemPrompt = saved;
+    const el = document.getElementById("customSystemPrompt");
+    if (el) el.value = saved;
+  }
+  const el = document.getElementById("customSystemPrompt");
+  if (el) {
+    el.addEventListener("input", () => {
+      customSystemPrompt = el.value;
+      localStorage.setItem(CUSTOM_PROMPT_KEY, customSystemPrompt);
+    });
+  }
+}
+
+// ─── MEMORY SYSTEM ───
+// Memory persists via localStorage (if available) + file download/upload.
+// Auto-extracts key facts from conversation every 5 agent messages.
+
+function tryLocalStorage(action, key, value) {
+  try {
+    if (action === "get") return localStorage.getItem(key);
+    if (action === "set") localStorage.setItem(key, value);
+    if (action === "remove") localStorage.removeItem(key);
+    return true;
+  } catch (e) { return null; }
+}
+
+function initMemory() {
+  const saved = tryLocalStorage("get", MEMORY_KEY);
+  if (saved) {
+    memoryContent = saved;
+    updateMemoryUI();
+  }
+  // Auto-sync every 60 seconds if dirty
+  memorySyncInterval = setInterval(() => {
+    if (memoryDirty) saveMemoryToStorage();
+  }, 60000);
+}
+
+function memoryItemCount() {
+  return memoryContent.trim() ? memoryContent.trim().split("\n").filter(l => l.trim()).length : 0;
+}
+
+function updateMemoryUI() {
+  const status = document.getElementById("memoryStatus");
+  const editor = document.getElementById("memoryEditor");
+  const count = memoryItemCount();
+  if (status) {
+    status.textContent = count ? `${count} ITEM${count > 1 ? "S" : ""}` : "EMPTY";
+    status.className = "memory-status" + (count ? " synced" : "");
+  }
+  if (editor && editor !== document.activeElement) {
+    editor.value = memoryContent;
+  }
+}
+
+// Sync editor changes back to memoryContent + localStorage
+document.addEventListener("input", (e) => {
+  if (e.target.id === "memoryEditor") {
+    memoryContent = e.target.value;
+    tryLocalStorage("set", MEMORY_KEY, memoryContent);
+    const status = document.getElementById("memoryStatus");
+    const count = memoryItemCount();
+    if (status) {
+      status.textContent = count ? `${count} ITEM${count > 1 ? "S" : ""}` : "EMPTY";
+      status.className = "memory-status synced";
+    }
+  }
+});
+
+function addMemoryItem() {
+  const input = document.getElementById("memoryAddInput");
+  const text = input?.value.trim();
+  if (!text) return;
+  memoryContent = memoryContent.trim() ? memoryContent.trim() + "\n- " + text : "- " + text;
+  tryLocalStorage("set", MEMORY_KEY, memoryContent);
+  input.value = "";
+  updateMemoryUI();
+  flashMemoryStatus("ADDED");
+  // Scroll editor to bottom
+  const editor = document.getElementById("memoryEditor");
+  if (editor) { editor.scrollTop = editor.scrollHeight; }
+}
+
+function saveMemoryToStorage() {
+  tryLocalStorage("set", MEMORY_KEY, memoryContent);
+  memoryDirty = false;
+  flashMemoryStatus("SAVED");
+}
+
+function flashMemoryStatus(text) {
+  const status = document.getElementById("memoryStatus");
+  if (!status) return;
+  const prev = status.textContent;
+  status.textContent = text;
+  status.className = "memory-status synced";
+  setTimeout(() => updateMemoryUI(), 1200);
+}
+
+function loadMemoryFromFile() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".md,.txt";
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const raw = await file.text();
+    // Merge imported items with existing
+    const existing = getMemoryItems();
+    const imported = raw.split("\n").map(l => l.replace(/^[-•#]\s*/, "").trim()).filter(l => l && !l.startsWith("Saved:") && !l.startsWith("SMOOTHBRAIN"));
+    const merged = [...new Set([...existing, ...imported])];
+    setMemoryFromItems(merged);
+    updateMemoryUI();
+    flashMemoryStatus("IMPORTED");
+  };
+  input.click();
+}
+
+function saveMemoryToFile() {
+  if (!memoryContent.trim()) return;
+  const header = `# SMOOTHBRAIN RESEARCH HUB — Memory\n# Saved: ${new Date().toISOString()}\n\n`;
+  const blob = new Blob([header + memoryContent], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "smoothbrain-memory.md";
+  a.click();
+  URL.revokeObjectURL(url);
+  flashMemoryStatus("EXPORTED");
+}
+
+function saveMemoryNow() {
+  saveMemoryToStorage();
+  saveMemoryToFile();
+}
+
+function clearMemory() {
+  memoryContent = "";
+  tryLocalStorage("remove", MEMORY_KEY);
+  memoryDirty = false;
+  updateMemoryUI();
+}
+
+// Auto-extract memory from conversation every N messages
+function maybeExtractMemory() {
+  // Only extract if we have enough messages and an agent is available
+  const assistantMsgs = messages.filter(m => m.role === "assistant");
+  if (assistantMsgs.length > 0 && assistantMsgs.length % 5 === 0) {
+    extractMemoryFromConversation();
+  }
+}
+
+async function extractMemoryFromConversation() {
+  // Pick first available agent to do memory extraction
+  const extractAgent = taggedAgents[0] || "claude";
+  const extractPrompt = `Based on the conversation so far, extract any KEY FACTS, USER PREFERENCES, IMPORTANT DECISIONS, or CONTEXT that should be remembered for future sessions. Format as concise bullet points. Only include genuinely important/reusable information. If nothing new worth remembering, respond with just "NO_NEW_MEMORY".
+
+Current memory:
+${memoryContent || "(empty)"}
+
+Return ONLY the updated memory (all existing items that are still relevant + any new items). Use bullet format:
+- fact one
+- fact two`;
+
+  try {
+    const recentMsgs = messages.slice(-8).map(m => ({
+      role: m.role === "user" ? "user" : "assistant",
+      content: m.agent ? `[${AGENTS[m.agent]?.name}]: ${m.content}` : m.content,
+    }));
+    const memHistory = [
+      { role: "user", content: "Here is the recent conversation context:" },
+      ...recentMsgs,
+      { role: "user", content: extractPrompt }
+    ];
+    const result = await callAgent(extractAgent, memHistory);
+    if (result && !result.includes("NO_NEW_MEMORY") && !result.includes("Connection error")) {
+      memoryContent = result.trim();
+      memoryDirty = true;
+      updateMemoryUI();
+      saveMemoryToStorage();
+    }
+  } catch (e) {
+    console.log("Memory extraction skipped:", e.message);
+  }
+}
+
+// ─── INIT ───
+setupFileUpload();
+renderToggles();
+initCustomPrompt();
+initMemory();
+initApiKeyInputs();
+Brain.drawLogo();
+Brain.startHero();
+$input.focus();
+
+// ─── ROTATING SUBTITLE ───
+const TAGLINES = [
+  "RESEARCH HUB", "NO THOUGHTS JUST VIBES", "PEER REVIEWED*",
+  "TRUST ME BRO", "CITATIONS NEEDED", "GALAXY BRAIN MODE",
+  "BARELY FUNCTIONAL", "POWERED BY COPE", "0 WRINKLES",
+  "SOURCE: I MADE IT UP", "WORKS ON MY MACHINE",
+  "AI SLOP FACTORY", "PUBLISH OR PERISH",
+];
+let taglineIdx = 0;
+const $subtitle = document.querySelector(".header-subtitle");
+setInterval(() => {
+  taglineIdx = (taglineIdx + 1) % TAGLINES.length;
+  $subtitle.style.opacity = "0";
+  $subtitle.style.transform = "translateY(-4px)";
+  setTimeout(() => {
+    $subtitle.textContent = TAGLINES[taglineIdx];
+    $subtitle.style.opacity = "";
+    $subtitle.style.transform = "";
+  }, 250);
+}, 6000);
+</script>
+</body>
+</html>

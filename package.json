@@ -1,0 +1,29 @@
+{
+  "name": "smoothbrain",
+  "version": "1.0.0",
+  "description": "Smoothbrain Research Hub - Multi-Agent AI Chat",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac"
+  },
+  "dependencies": {
+    "electron": "^33.0.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.smoothbrain.hub",
+    "productName": "Smoothbrain",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dmg",
+      "darkModeSupport": true
+    },
+    "files": [
+      "main.js",
+      "9nexus-comms.html"
+    ]
+  }
+}
