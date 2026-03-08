@@ -20,7 +20,7 @@ function getLocalIP() {
 
 function startLanServer() {
   if (lanServer) return;
-  const htmlPath = path.join(__dirname, "9nexus-comms.html");
+  const htmlPath = path.join(__dirname, "smoothbrain.html");
   lanServer = http.createServer((req, res) => {
     fs.readFile(htmlPath, "utf8", (err, data) => {
       if (err) { res.writeHead(500); res.end("Error"); return; }
@@ -85,7 +85,7 @@ function createWindow() {
     show: false,
   });
 
-  mainWindow.loadFile("9nexus-comms.html");
+  mainWindow.loadFile("smoothbrain.html");
 
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
