@@ -678,6 +678,16 @@
   }
   .msg-content strong { color: rgba(255,255,255,0.92); font-weight: 500; }
   .msg-content em { font-style: italic; opacity: 0.85; }
+  .msg-content .msg-image { margin: 10px 0; }
+  .msg-content .msg-image img {
+    max-width: 100%;
+    max-height: 512px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .msg-content .msg-image img:hover { opacity: 0.85; }
   .mention {
     font-weight: 500; cursor: default;
     padding: 1px 4px; border-radius: 4px;
@@ -1847,6 +1857,7 @@ function getTimestamp() {
 
 function renderInline(text) {
   return text
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="inline-gen-img" style="max-width:100%;max-height:512px;border-radius:10px;cursor:pointer" onclick="window.open(this.src,\'_blank\')" loading="lazy">')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
@@ -1909,6 +1920,15 @@ function renderMessageHTML(text) {
 
     if (inCodeBlock) {
       codeContent += (codeContent ? "\n" : "") + line;
+      continue;
+    }
+
+    // Images: ![alt](src)
+    const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)\s*$/);
+    if (imgMatch) {
+      const alt = escapeHtml(imgMatch[1]);
+      const src = imgMatch[2];
+      html += `<div class="msg-image"><img src="${src}" alt="${alt}" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
       continue;
     }
 
@@ -2116,6 +2136,22 @@ async function callClaudeAPI(history) {
   if (!key) throw new Error("No Claude API key");
 
   const merged = prepareHistory(history, "claude");
+  const images = getUploadedImages();
+
+  // Inject images into the last user message as multimodal content
+  if (images.length > 0 && merged.length > 0) {
+    const lastUser = [...merged].reverse().find(m => m.role === "user");
+    if (lastUser) {
+      const parts = [];
+      for (const img of images) {
+        const parsed = parseDataURL(img.content);
+        if (parsed) parts.push({ type: "image", source: { type: "base64", media_type: parsed.mediaType, data: parsed.base64 } });
+      }
+      parts.push({ type: "text", text: lastUser.content });
+      lastUser.content = parts;
+    }
+  }
+
   const resp = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -2145,14 +2181,30 @@ async function callOpenAIAPI(history) {
   const key = API_KEYS.codex || DEFAULT_KEYS.codex;
   if (!key) throw new Error("No OpenAI API key");
 
-  // Guard: some models (e.g. gpt-5.4-pro) are not chat models
   const NON_CHAT_MODELS = ["gpt-5.4-pro", "gpt-5.2-pro", "gpt-5-pro"];
   if (NON_CHAT_MODELS.includes(selectedModels.codex)) {
     throw new Error(`${selectedModels.codex} is not a chat model. Switch to a different model in settings.`);
   }
 
+  // Check if this is an image generation request
+  const lastUserMsg = [...history].reverse().find(m => m.role === "user");
+  if (lastUserMsg && isImageGenRequest(lastUserMsg.content)) {
+    return await generateImageOpenAI(key, lastUserMsg.content);
+  }
+
   const merged = prepareHistory(history, "codex");
+  const images = getUploadedImages();
   const isReasoning = /^o\d/.test(selectedModels.codex);
+
+  // Inject images into last user message for vision
+  if (images.length > 0 && merged.length > 0 && !isReasoning) {
+    const lastUser = [...merged].reverse().find(m => m.role === "user");
+    if (lastUser && typeof lastUser.content === "string") {
+      const parts = images.map(img => ({ type: "image_url", image_url: { url: img.content } }));
+      parts.push({ type: "text", text: lastUser.content });
+      lastUser.content = parts;
+    }
+  }
 
   const body = {
     model: selectedModels.codex,
@@ -2167,7 +2219,7 @@ async function callOpenAIAPI(history) {
 
   if (isReasoning) {
     body.max_completion_tokens = 4096;
-    if (!body.messages.some(m => m.content.includes("[System]"))) {
+    if (!body.messages.some(m => typeof m.content === "string" && m.content.includes("[System]"))) {
       body.messages.unshift({ role: "user", content: `[System instructions]: ${SYSTEM_PROMPTS.codex}` });
       body.messages.splice(1, 0, { role: "assistant", content: "Understood. I'll follow these instructions." });
     }
@@ -2192,12 +2244,38 @@ async function callOpenAIAPI(history) {
   return data.choices?.[0]?.message?.content || "Standing by.";
 }
 
+async function generateImageOpenAI(key, prompt) {
+  const resp = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+    body: JSON.stringify({ model: "gpt-image-1", prompt, n: 1, size: "1024x1024", output_format: "b64_json" }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `OpenAI Image API ${resp.status}`);
+  }
+  const data = await resp.json();
+  const b64 = data.data?.[0]?.b64_json;
+  const url = data.data?.[0]?.url;
+  if (b64) return `![Generated Image](data:image/png;base64,${b64})`;
+  if (url) return `![Generated Image](${url})`;
+  return "Image generation completed but no image was returned.";
+}
+
 // ─── GEMINI API ───
 async function callGeminiAPI(history) {
   const key = API_KEYS.gemini || DEFAULT_KEYS.gemini;
   if (!key) throw new Error("No Gemini API key");
 
+  // Check for image generation request
+  const lastUserMsg = [...history].reverse().find(m => m.role === "user");
+  if (lastUserMsg && isImageGenRequest(lastUserMsg.content)) {
+    return await generateImageGemini(key, lastUserMsg.content);
+  }
+
   const merged = prepareHistory(history, "gemini");
+  const images = getUploadedImages();
+
   // Gemini requires strict user/model alternation — re-merge if needed
   const contents = [];
   for (const m of merged) {
@@ -2206,6 +2284,21 @@ async function callGeminiAPI(history) {
       contents[contents.length - 1].parts[0].text += "\n\n" + m.content;
     } else {
       contents.push({ role, parts: [{ text: m.content }] });
+    }
+  }
+
+  // Inject images into last user message for vision
+  if (images.length > 0 && contents.length > 0) {
+    const lastUser = [...contents].reverse().find(c => c.role === "user");
+    if (lastUser) {
+      const textPart = lastUser.parts[0];
+      const newParts = [];
+      for (const img of images) {
+        const parsed = parseDataURL(img.content);
+        if (parsed) newParts.push({ inline_data: { mime_type: parsed.mediaType, data: parsed.base64 } });
+      }
+      newParts.push(textPart);
+      lastUser.parts = newParts;
     }
   }
 
@@ -2227,7 +2320,48 @@ async function callGeminiAPI(history) {
     throw new Error(err.error?.message || `Gemini API ${resp.status}`);
   }
   const data = await resp.json();
-  return data.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join("\n") || "Analysis pending.";
+  // Handle mixed text+image response
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  let result = "";
+  for (const p of parts) {
+    if (p.text) result += (result ? "\n" : "") + p.text;
+    if (p.inline_data) {
+      const mime = p.inline_data.mime_type || "image/png";
+      result += (result ? "\n\n" : "") + `![Generated Image](data:${mime};base64,${p.inline_data.data})`;
+    }
+  }
+  return result || "Analysis pending.";
+}
+
+async function generateImageGemini(key, prompt) {
+  // Use Gemini's native image generation via responseModalities
+  const model = "gemini-2.0-flash-exp";
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+      }),
+    }
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Gemini Image API ${resp.status}`);
+  }
+  const data = await resp.json();
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  let result = "";
+  for (const p of parts) {
+    if (p.text) result += (result ? "\n" : "") + p.text;
+    if (p.inline_data) {
+      const mime = p.inline_data.mime_type || "image/png";
+      result += (result ? "\n\n" : "") + `![Generated Image](data:${mime};base64,${p.inline_data.data})`;
+    }
+  }
+  return result || "Image generation completed but no image was returned.";
 }
 
 // ─── GROK API (xAI — OpenAI-compatible) ───
@@ -2235,7 +2369,25 @@ async function callGrokAPI(history) {
   const key = API_KEYS.grok || DEFAULT_KEYS.grok;
   if (!key) throw new Error("No xAI API key — add one in Settings > Keys");
 
+  // Check for image generation request
+  const lastUserMsg = [...history].reverse().find(m => m.role === "user");
+  if (lastUserMsg && isImageGenRequest(lastUserMsg.content)) {
+    return await generateImageGrok(key, lastUserMsg.content);
+  }
+
   const merged = prepareHistory(history, "grok");
+  const images = getUploadedImages();
+
+  // Inject images into last user message for vision (OpenAI-compatible format)
+  if (images.length > 0 && merged.length > 0) {
+    const lastUser = [...merged].reverse().find(m => m.role === "user");
+    if (lastUser && typeof lastUser.content === "string") {
+      const parts = images.map(img => ({ type: "image_url", image_url: { url: img.content } }));
+      parts.push({ type: "text", text: lastUser.content });
+      lastUser.content = parts;
+    }
+  }
+
   const resp = await fetch("https://api.x.ai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -2260,6 +2412,27 @@ async function callGrokAPI(history) {
   return data.choices?.[0]?.message?.content || "Standing by.";
 }
 
+async function generateImageGrok(key, prompt) {
+  const resp = await fetch("https://api.x.ai/v1/images/generations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${key}`,
+    },
+    body: JSON.stringify({ model: "grok-2-image", prompt, n: 1, response_format: "b64_json" }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `xAI Image API ${resp.status}`);
+  }
+  const data = await resp.json();
+  const b64 = data.data?.[0]?.b64_json;
+  const url = data.data?.[0]?.url;
+  if (b64) return `![Generated Image](data:image/png;base64,${b64})`;
+  if (url) return `![Generated Image](${url})`;
+  return "Image generation completed but no image was returned.";
+}
+
 // ─── UNIFIED AGENT CALL ───
 async function callAgent(agentKey, history) {
   try {
@@ -2279,12 +2452,30 @@ async function callAgent(agentKey, history) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// ─── IMAGE GEN DETECTION ───
+function isImageGenRequest(text) {
+  if (typeof text !== "string") return false;
+  const t = text.toLowerCase();
+  const triggers = [
+    /\b(generate|create|make|draw|paint|sketch|design|render|produce)\b.{0,20}\b(image|picture|photo|illustration|art|artwork|icon|logo|graphic|poster|banner|visual|portrait|scene)\b/,
+    /\b(image|picture|photo|illustration|art|artwork)\b.{0,20}\b(of|showing|depicting|with|featuring)\b/,
+    /\bshow me\b.{0,15}\b(image|picture|what .+ looks like)\b/,
+    /\b(visualize|illustrate)\b/,
+  ];
+  return triggers.some(rx => rx.test(t));
+}
+
 // ─── FILE CONTEXT ───
 function getFileContext() {
-  if (uploadedFiles.length === 0) return "";
-  return "\n\n[Uploaded files for research]:\n" + uploadedFiles.map(f =>
+  const textFiles = uploadedFiles.filter(f => !f.isImage);
+  if (textFiles.length === 0) return "";
+  return "\n\n[Uploaded files for research]:\n" + textFiles.map(f =>
     `--- ${f.name} ---\n${f.content.slice(0, 12000)}${f.content.length > 12000 ? "\n[...truncated]" : ""}\n--- end ${f.name} ---`
   ).join("\n\n");
+}
+
+function getUploadedImages() {
+  return uploadedFiles.filter(f => f.isImage);
 }
 
 function renderFileBadges() {
@@ -2630,23 +2821,46 @@ document.addEventListener("keydown", (e) => {
 });
 
 // ─── FILE UPLOAD ───
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+
 function setupFileUpload() {
   const input = document.createElement("input");
   input.type = "file"; input.id = "fileUpload"; input.multiple = true;
-  input.accept = ".txt,.md,.js,.jsx,.ts,.tsx,.py,.json,.csv,.html,.css,.xml,.yaml,.yml,.toml,.rs,.go,.java,.c,.cpp,.h,.sh,.sql,.log,.env,.cfg,.ini,.conf";
+  input.accept = ".txt,.md,.js,.jsx,.ts,.tsx,.py,.json,.csv,.html,.css,.xml,.yaml,.yml,.toml,.rs,.go,.java,.c,.cpp,.h,.sh,.sql,.log,.env,.cfg,.ini,.conf,.png,.jpg,.jpeg,.gif,.webp";
   input.style.display = "none";
   document.body.appendChild(input);
 
   input.addEventListener("change", async (e) => {
     for (const file of e.target.files) {
       try {
-        const content = await file.text();
-        uploadedFiles.push({ name: file.name, content, type: file.type });
+        if (IMAGE_TYPES.includes(file.type)) {
+          const dataUrl = await fileToDataURL(file);
+          uploadedFiles.push({ name: file.name, content: dataUrl, type: file.type, isImage: true });
+        } else {
+          const content = await file.text();
+          uploadedFiles.push({ name: file.name, content, type: file.type, isImage: false });
+        }
         addFileBadge(file.name);
       } catch (err) { console.error("File read error:", err); }
     }
     input.value = "";
   });
+}
+
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Extract base64 and media type from data URL
+function parseDataURL(dataUrl) {
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) return null;
+  return { mediaType: match[1], base64: match[2] };
 }
 
 // ─── CLEAR ───
