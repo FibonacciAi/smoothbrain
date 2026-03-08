@@ -149,6 +149,11 @@ const template = [
         click: () => mainWindow?.webContents.executeJavaScript("originalClear()"),
       },
       {
+        label: "Export Chat",
+        accelerator: "Cmd+E",
+        click: () => mainWindow?.webContents.executeJavaScript("exportChat()"),
+      },
+      {
         label: "Reload Page",
         accelerator: "Cmd+Shift+R",
         click: () => mainWindow?.webContents.reload(),
